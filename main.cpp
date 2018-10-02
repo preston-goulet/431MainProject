@@ -95,6 +95,8 @@ void init() {
 	glFogf(GL_FOG_DENSITY, 0.75);
 	glFogf(GL_FOG_START, 10000.0);
 	glFogf(GL_FOG_END, 70000);
+
+	glClearStencil(0);
 }
 
 // reshape
@@ -113,7 +115,7 @@ void renderBitmapString(float x, float y, float z, const char *string) {
 
 // display
 void display(void) {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// projection
 	glMatrixMode(GL_PROJECTION);
@@ -127,18 +129,17 @@ void display(void) {
 	glLoadIdentity();
 
 	// lookAt
-	gluLookAt(camera_x, camera_y, camera_z, camera_viewing_x, camera_viewing_y, camera_viewing_z, 0.0f, 1.0f, 0.0f);
+	gluLookAt(camera_x, camera_y, camera_z,
+		camera_viewing_x, camera_viewing_y, camera_viewing_z,
+		0.0f, 1.0f, 0.0f);
+
 	// camera
 	//glPushMatrix();
 		glRotatef(camera_rotate, 0.0f, 1.0f, 0.0f);
 		//glTranslatef(camera_x, 0, camera_z);
 	//glPopMatrix();
 
-	//plane
-	glPushMatrix();
-	glTranslatef(-perlinMeshSize/2, 0, -perlinMeshSize/2);
-	glCallList(display1);
-	glPopMatrix();
+
 	// box 1
 	//glPushMatrix();
 	//glTranslatef(moveBlock, 200, moveBlock_side);
@@ -161,11 +162,23 @@ void display(void) {
 	glCallList(display5);
 	glPopMatrix();
 
-	//lava/fire
+	// ===== STENCIL DRAW ============================================================================
+
+	glEnable(GL_STENCIL_TEST); //Start using the stencil
+	glDisable(GL_DEPTH_TEST);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); //Disable writing colors in frame buffer
+	glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF); //Place a 1 where rendered
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); 	//Replace where rendered
+	// PLAIN for the stencil
 	glPushMatrix();
 	glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
 	glCallList(display6);
 	glPopMatrix();
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); //Reenable color
+	glEnable(GL_DEPTH_TEST);
+	glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); //Keep the pixel
+
 
 	//moving box
 	glPushMatrix();	
@@ -175,6 +188,31 @@ void display(void) {
 	glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
 	glCallList(display7);
 	glPopMatrix();
+
+	// STENCIL-STEP 4. disable it
+	glDisable(GL_STENCIL_TEST);
+
+	//========Regular 3d environment=====================================
+	glEnable(GL_BLEND);
+	glDisable(GL_LIGHTING);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(0.7, 0.0, 0.0, 0.3);
+	glColor4f(1.0, 1.0, 1.0, 0.3);
+
+	//Water
+	glPushMatrix();
+	glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
+	glCallList(display6);
+	glPopMatrix();
+	glEnable(GL_LIGHTING);
+	glDisable(GL_BLEND);
+
+	//plane
+	glPushMatrix();
+	glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
+	glCallList(display1);
+	glPopMatrix();
+
 	//end
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -332,10 +370,10 @@ void specialkeys(int key, int x, int y) {
 // main
 int main(int argc, char* argv[]) {
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_STENCIL);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(window_width, window_height);
-	glutCreateWindow("Sky Box");
+	glutCreateWindow("The Game");
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 	glutIdleFunc(display);
