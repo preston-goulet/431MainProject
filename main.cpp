@@ -24,6 +24,11 @@ const int skyBoxMeshSize = 80000;
 
 // init
 void init() {
+
+	// configuration
+	glShadeModel(GL_SMOOTH);
+	glEnable(GL_DEPTH_TEST);
+
 	// mesh
 	mesh1 = createPerlinPlane(80000, 80000, 400);
 	//heightMap = getHeightMap(mesh1);
@@ -68,9 +73,7 @@ void init() {
 	display6 = meshToDisplayList(mesh6, 6, textures[5]);//Lava
 	display7 = meshToDisplayList(mesh7, 7, textures[6]);
 
-	// configuration
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_DEPTH_TEST);
+
 	
 	// light
 	glEnable(GL_LIGHT0);
@@ -134,11 +137,8 @@ void display(void) {
 		0.0f, 1.0f, 0.0f);
 
 	// camera
-	//glPushMatrix();
-		glRotatef(camera_rotate, 0.0f, 1.0f, 0.0f);
-		//glTranslatef(camera_x, 0, camera_z);
-	//glPopMatrix();
-
+	glRotatef(camera_rotate, 0.0f, 1.0f, 0.0f);
+	//glTranslatef(camera_x, 0, camera_z);
 
 	// box 1
 	//glPushMatrix();
@@ -171,8 +171,8 @@ void display(void) {
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); 	//Replace where rendered
 	// PLAIN for the stencil
 	glPushMatrix();
-	glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
-	glCallList(display6);
+		glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
+		glCallList(display6);
 	glPopMatrix();
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); //Reenable color
 	glEnable(GL_DEPTH_TEST);
@@ -180,12 +180,13 @@ void display(void) {
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); //Keep the pixel
 
 
-	//moving box
+	//Box Reflection
 	glPushMatrix();	
-	glTranslatef(boxPositionX, boxPositionY, boxPositionZ);
+	glScalef(1.0, -1.0, 1.0);
+	glTranslatef(boxPositionX, 50, boxPositionZ);
 	glRotatef(boxRotationX, 1.0, 0.0, 0.0);
-	glRotatef(total_moving_angle, 0.0, 1.0, 0.0);
-	glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
+	//glRotatef(total_moving_angle, 0.0, 1.0, 0.0);
+	//glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
 	glCallList(display7);
 	glPopMatrix();
 
@@ -206,6 +207,15 @@ void display(void) {
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
+
+	//moving box
+	glPushMatrix();
+	glTranslatef(boxPositionX, boxPositionY, boxPositionZ);
+	glRotatef(boxRotationX, 1.0, 0.0, 0.0);
+	glRotatef(total_moving_angle, 0.0, 1.0, 0.0);
+	glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
+	glCallList(display7);
+	glPopMatrix();
 
 	//plane
 	glPushMatrix();
@@ -230,7 +240,7 @@ void display(void) {
 	glColor3f(1.0, 1.0, 1.0);
 	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
 	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
-	renderBitmapString(0.0, window_height - 39.0f, 0.0f, "Use I, J, K and L to move the box");
+	//renderBitmapString(0.0, window_height - 39.0f, 0.0f, "Use I, J, K and L to move the box");
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
@@ -264,10 +274,10 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 			camera_viewing_y -= 10;
 			break;
 		case 'a': case 'A':
-			camera_rotate -= (10); //rotates camera
+			camera_rotate -= (5); //rotates camera
 			break;
 		case 'd': case 'D':
-			camera_rotate += (10);
+			camera_rotate += (5);
 			break;
 		case 'l': case 'L':
 			moveBlock += (10);
