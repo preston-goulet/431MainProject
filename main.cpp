@@ -32,6 +32,8 @@ float randY = 0;
 float randX = 0;
 float randZ = 0;
 
+int countDown = 10000;
+
 
 //Moving Flat
 //float camera_x = 0.0f, camera_y = 20.0f, camera_z = 5.0f;
@@ -429,7 +431,8 @@ void display(void) {
 	//=======================================================================
 	// Lighting disabled from here on to allow other colors on the screen
 	//=======================================================================
-
+	countDown = countDown - 1;
+	string countDownString = to_string(countDown);
 	glDisable(GL_LIGHTING);
 
 	// texto
@@ -443,7 +446,8 @@ void display(void) {
 	glColor3f(0.0, 1.0, 0.0);
 	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
 	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
-	//renderBitmapString(0.0, window_height - 39.0f, 0.0f, "Use I, J, K and L to move the box");
+	renderBitmapString( (window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: " );	
+	renderBitmapString( (window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str() );
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
@@ -473,6 +477,8 @@ void display(void) {
 		glVertex2f( 0, window_height );//top left
 	glEnd();
 
+	glColor3f(1.0, 1.0, 1.0);
+	renderBitmapString(0.0, window_height / 2, 0.0f, "Time Left: ");
 	
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
