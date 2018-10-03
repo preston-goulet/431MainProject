@@ -30,7 +30,13 @@ struct Mesh {
 	
 	Vec3f maxBoundingPoint;
 	Vec3f minBoundingPoint;
-	
+
+};
+
+struct Points {
+	float x;
+	float y;
+	float z;
 };
 
 float **heightMap;
