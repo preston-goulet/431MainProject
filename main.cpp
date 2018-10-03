@@ -207,6 +207,8 @@ void init() {
 void reshape(int w, int h) {
 	window_width = w;
 	window_height = h;
+	if (h == 0) h = 1;
+	window_ratio = 1.0f * w / h;
 }
 
 // text
