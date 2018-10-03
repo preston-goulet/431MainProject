@@ -20,6 +20,8 @@ Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8;
 GLuint display1, display2, display3, display4, display5, display6, display7;
 GLuint textures[5];
 GLuint jetMesh;
+GLuint boundingBox;
+
 vector<Points> box_spawn;
 
 const int boundaryMeshSize = 60000;
@@ -111,6 +113,9 @@ void init() {
 	// particles
 	init_frame_timer();
 
+	// menu
+	addMenu();
+
 	// configuration
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
@@ -136,6 +141,7 @@ void init() {
 	calculateNormalPerFace(mesh5);
 	calculateNormalPerFace(mesh6);
 	calculateNormalPerFace(mesh7);
+	calculateNormalPerFace(mesh8);
 	calculateNormalPerVertex(mesh1);
 	calculateNormalPerVertex(mesh2);
 	calculateNormalPerVertex(mesh3);
@@ -143,6 +149,9 @@ void init() {
 	calculateNormalPerVertex(mesh5);
 	calculateNormalPerVertex(mesh6);
 	calculateNormalPerVertex(mesh7);
+	calculateNormalPerVertex(mesh8);
+
+	calculateBoundingPoints(mesh8);
 	
 	// textures
 	loadBMP_custom(textures, "_BMP_files/grass.bmp", 0);
@@ -153,7 +162,6 @@ void init() {
 	codedTexture(textures, 5, 2); //Fire texture - noise fire. Type=2
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
 	
-
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
 	display2 = meshToDisplayList(mesh2, 2, textures[1]);
@@ -164,7 +172,7 @@ void init() {
 	display7 = meshToDisplayList(mesh7, 7, textures[6]);
 	jetMesh = meshToDisplayListObjects(mesh8, 8);
 
-
+	boundingBox = boundingBoxToDisplayList(mesh8, 9);
 	
 	// light
 	glEnable(GL_LIGHT0);
@@ -181,7 +189,9 @@ void init() {
 	//===================================
 	// Fog
 	//===================================
-	glEnable(GL_FOG);
+	if (isFogOn) {
+		glEnable(GL_FOG);
+	}
 	
 	glFogi(GL_FOG_MODE, GL_LINEAR);
 	GLfloat fogColor[4] = { 0.5, 0.5, 0.9, 1.0 };
@@ -294,26 +304,53 @@ void display(void) {
 	glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF); //Place a 1 where rendered
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); 	//Replace where rendered
 	// PLAIN for the stencil
-	glPushMatrix();
+	if (isReflectionOn) { //Add Toggle to reflection
+		glPushMatrix();
 		glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
 		glCallList(display6); //Water
-	glPopMatrix();
+		glPopMatrix();
+	}
+
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); //Reenable color
 	glEnable(GL_DEPTH_TEST);
 	glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); //Keep the pixel
 
-
 	//Jet Reflection
 	glPushMatrix();	
 		glScalef(1.0, -1.0, 1.0);
-		glTranslatef(jetPositionX, 14, jetPositionZ);
-		//glRotatef(boxRotationX, 1.0, 0.0, 0.0);
-		glRotatef(180, 0.0, 1.0, 0.0);
-		//glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
+		glTranslatef(camera_x, 14, camera_z - 500);
+		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(jetMesh); //display7
 	glPopMatrix();
+
+	//============================================
+	//	Exhaust flames reflection
+	//============================================
+	if (areParticlesOn) {
+		//Particles with box 1
+		for (int i = 0; i < 50; i++) {
+			ps.add();
+		}
+		ps2.add();
+	}
+	float time = calculate_frame_time();
+	ps.update(time);
+	ps2.update(time);
+	for (int i = 0; i < 50; i++) {
+		ps.remove();
+	}
+	ps.remove();
+	glPushMatrix();
+	glTranslatef(camera_x + 10, 5, camera_z - 400);
+	glRotatef(90, 1, 0, 0);
+	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
+	glScalef(.1, .1, .1);
+	drawParticles();//flames
+	glPopMatrix();
+
 
 	// STENCIL-STEP 4. disable it
 	glDisable(GL_STENCIL_TEST);
@@ -335,30 +372,33 @@ void display(void) {
 	//============================================
 	//	Exhaust flames
 	//============================================
-	float time = calculate_frame_time();
-
-	//Particles with box 1
-	for (int i = 0; i < 50; i++) {
-		ps.add();
-	}
-	ps2.add();
-	ps.update(time);
-	ps2.update(time);
-	for (int i = 0; i < 50; i++) {
-		ps.remove();
-	}
 	ps.remove();
 	glPushMatrix();
 	glTranslatef(camera_x + 12, camera_y - 60, camera_z - 450);
 	glRotatef(90, 1, 0, 0);
 	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
 	glScalef(.1, .1, .1);
-		drawParticles();//flames
+	drawParticles();//flames
 	glPopMatrix();
-
+	
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
 	glEnable(GL_LIGHT0);
+
+	if (areBoundingBoxesOn) {
+		//bounding box
+		glPushMatrix();
+		glDisable(GL_LIGHTING);
+		glColor3f(1.0, 1.0, 0.0);
+		glTranslatef(camera_x, camera_y - 100, camera_z - 500);
+		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glTranslatef(lookx, looky, lookz);
+		glScalef(10, 10, 10);
+		glCallList(boundingBox);
+
+		glEnable(GL_LIGHTING);
+		glPopMatrix();
+	}
 
 	//==========================
 	// jet
@@ -376,6 +416,7 @@ void display(void) {
 		glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
 		glCallList(display1);
 	glPopMatrix();
+
 
 	//end
 	glMatrixMode(GL_PROJECTION);
