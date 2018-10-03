@@ -11,15 +11,109 @@
 #include "texture.h"
 #include "render.h"
 #include "controls.h"
+#include "particles.h"
+#include "timer.h"
 
 
 // global
-Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7;
+Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8;
 GLuint display1, display2, display3, display4, display5, display6, display7;
 GLuint textures[5];
+GLuint jetMesh;
 
 const int boundaryMeshSize = 60000;
 const int skyBoxMeshSize = 80000;
+
+// Adds mesh for object files
+GLuint meshToDisplayListObjects(Mesh* m, int id) {
+	GLuint listID = glGenLists(id);
+	glNewList(listID, GL_COMPILE);
+	glBegin(GL_TRIANGLES);
+
+	for (unsigned int i = 0; i < m->face_index_vertex.size(); i++) {
+		// PER VERTEX NORMALS
+		if ((!m->dot_normalPerVertex.empty() && !m->face_index_normalPerVertex.empty())) {
+			glNormal3fv(&m->dot_normalPerVertex[m->face_index_normalPerVertex[i]].x);
+		}
+		if (!m->dot_texture.empty() && !m->face_index_texture.empty()) {
+			glTexCoord2fv(&m->dot_texture[m->face_index_texture[i]].x);
+		}
+		// color
+		Vec3f offset = (m->dot_vertex[m->face_index_vertex[i]]);
+		//
+		glColor3f(fabs(sin(offset.x)), fabs(cos(offset.y)), fabs(offset.z));
+		glVertex3fv(&m->dot_vertex[m->face_index_vertex[i]].x);
+	}
+
+	glEnd();
+	glEndList();
+	return listID;
+}
+
+// draw particles
+void drawParticles() {
+	Particle* curr = ps.particle_head;
+	// glPointSize(2);
+	// glBegin(GL_POINTS);
+	// while (curr) {
+	//   glVertex3fv(curr->position);
+	//	 curr = curr->next;
+	// }
+	// glEnd();
+	while (curr) {
+		glPushMatrix();
+		glScalef(100.0, 100.0, 100.0);
+		glTranslatef(curr->position[0], curr->position[1], curr->position[2]);
+		glScalef(0.2, 0.2, 0.2);
+		glColor4f(curr->color[0], curr->color[1], curr->color[2], 0.3);
+		//front
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(0, 0, 0); // vertices of the triangle 1
+		glVertex3f(0, 1, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(1, 1, 0);
+		glEnd();
+		//back
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(0, 0, -1); // vertices of the triangle 1
+		glVertex3f(0, 1, -1);
+		glVertex3f(1, 1, -1);
+		glVertex3f(1, 0, -1);
+		glEnd();
+		//left
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(0, 0, -1); // vertices of the triangle 1
+		glVertex3f(0, 1, -1);
+		glVertex3f(0, 1, 0);
+		glVertex3f(0, 0, 0);
+		glEnd();
+		//right
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(1, 0, -1); // vertices of the triangle 1
+		glVertex3f(1, 0, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(1, 1, -1);
+		glEnd();
+		//top
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(1, 1, -1); // vertices of the triangle 1
+		glVertex3f(1, 1, 0);
+		glVertex3f(0, 1, 0);
+		glVertex3f(0, 1, -1);
+		glEnd();
+		//bottom
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(1, 0, -1); // vertices of the triangle 1
+		glVertex3f(1, 0, 0);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, -1);
+		glEnd();
+
+		glPopMatrix();
+		curr = curr->next;
+	}
+
+}
 
 
 // init
@@ -38,6 +132,7 @@ void init() {
 	mesh5 = createSkyBox(skyBoxMeshSize);
 	mesh6 = createPlane(boundaryMeshSize, boundaryMeshSize, boundaryMeshSize/10);
 	mesh7 = createCube();
+	mesh8 = loadFile("OBJfiles/f-16.obj");
 	
 	// normals
 	calculateNormalPerFace(mesh1);
@@ -63,6 +158,7 @@ void init() {
 	loadBMP_custom(textures, "_BMP_files/cubesky.bmp", 4);
 	codedTexture(textures, 5, 2); //Fire texture - noise fire. Type=2
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
+	
 
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
@@ -72,6 +168,7 @@ void init() {
 	display5 = meshToDisplayList(mesh5, 5, textures[4]);
 	display6 = meshToDisplayList(mesh6, 6, textures[5]);//Lava
 	display7 = meshToDisplayList(mesh7, 7, textures[6]);
+	jetMesh = meshToDisplayListObjects(mesh8, 8);
 
 
 	
@@ -118,6 +215,7 @@ void renderBitmapString(float x, float y, float z, const char *string) {
 
 // display
 void display(void) {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// projection
@@ -172,7 +270,7 @@ void display(void) {
 	// PLAIN for the stencil
 	glPushMatrix();
 		glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
-		glCallList(display6);
+		glCallList(display6); //Water
 	glPopMatrix();
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); //Reenable color
 	glEnable(GL_DEPTH_TEST);
@@ -180,14 +278,15 @@ void display(void) {
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); //Keep the pixel
 
 
-	//Box Reflection
+	//Jet Reflection
 	glPushMatrix();	
-	glScalef(1.0, -1.0, 1.0);
-	glTranslatef(boxPositionX, 50, boxPositionZ);
-	glRotatef(boxRotationX, 1.0, 0.0, 0.0);
-	//glRotatef(total_moving_angle, 0.0, 1.0, 0.0);
-	//glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
-	glCallList(display7);
+		glScalef(1.0, -1.0, 1.0);
+		glTranslatef(boxPositionX, 14, boxPositionZ);
+		glRotatef(boxRotationX, 1.0, 0.0, 0.0);
+		glRotatef(180, 0.0, 1.0, 0.0);
+		//glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
+		glScalef(10, 10, 10);
+		glCallList(jetMesh); //display7
 	glPopMatrix();
 
 	// STENCIL-STEP 4. disable it
@@ -196,25 +295,49 @@ void display(void) {
 	//========Regular 3d environment=====================================
 	glEnable(GL_BLEND);
 	glDisable(GL_LIGHTING);
+	glDisable(GL_LIGHT0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(0.7, 0.0, 0.0, 0.3);
-	glColor4f(1.0, 1.0, 1.0, 0.3);
+	glColor4f(0.7, 0.0, 0.0, 0.9);
+	glColor4f(1.0, 1.0, 1.0, 0.9);
 
 	//Water
 	glPushMatrix();
 	glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
 	glCallList(display6);
 	glPopMatrix();
+
+	//============================================
+	//	Exhaust flames
+	//============================================
+	//float time = calculate_frame_time();
+
+	////Particles with box 1
+	//for (int i = 0; i < 50; i++) {
+	//	ps.add();
+	//}
+	//ps2.add();
+	//ps.update(time);
+	//ps2.update(time);
+	//for (int i = 0; i < 50; i++) {
+	//	ps.remove();
+	//}
+	//ps.remove();
+	//glPushMatrix();
+	//	drawParticles();//flames
+	//glPopMatrix();
+
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
+	glEnable(GL_LIGHT0);
 
-	//moving box
+	// jet
 	glPushMatrix();
 	glTranslatef(boxPositionX, boxPositionY, boxPositionZ);
 	glRotatef(boxRotationX, 1.0, 0.0, 0.0);
-	glRotatef(total_moving_angle, 0.0, 1.0, 0.0);
+	glRotatef(180, 0.0, 1.0, 0.0);
 	glRotatef(boxRotationZ, 0.0, 0.0, 1.0);
-	glCallList(display7);
+	glScalef(10, 10, 10);
+	glCallList(jetMesh); 
 	glPopMatrix();
 
 	//plane
@@ -245,6 +368,35 @@ void display(void) {
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
+	
+
+	//=====================================
+	// Second Viewport
+	//=====================================
+	glViewport(0, 0, window_width / 2, window_height / 4);///////////////////////////////////////////////////////////Second viewport
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	// Draw box for hud
+	glColor3f(0.941, 0.902, 0.549);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0.0, 1200.0, 0.0, 250.0);
+	
+	glColor3f(0.941, 0.902, 0.549);
+	//Bottom tunnel
+	glShadeModel(GL_FLAT);
+	glBegin(GL_QUADS);
+		glVertex2f( 0, 0 );//bottom left
+		glVertex2f( window_width, 0 );//bottom right
+		glVertex2f( window_width, window_height ); //top right
+		glVertex2f( 0, window_height );//top left
+	glEnd();
+
+	
+	glPopMatrix();
+
 	glutSwapBuffers();
 }
 
