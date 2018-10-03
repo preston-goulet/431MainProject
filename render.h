@@ -106,6 +106,32 @@ GLuint meshToDisplayList(Mesh* m, int id, int texture) {
 	return listID;
 }
 
+// Adds mesh for object files
+GLuint meshToDisplayListObjects(Mesh* m, int id) {
+	GLuint listID = glGenLists(id);
+	glNewList(listID, GL_COMPILE);
+	glBegin(GL_TRIANGLES);
+
+	for (unsigned int i = 0; i < m->face_index_vertex.size(); i++) {
+		// PER VERTEX NORMALS
+		if ((!m->dot_normalPerVertex.empty() && !m->face_index_normalPerVertex.empty())) {
+			glNormal3fv(&m->dot_normalPerVertex[m->face_index_normalPerVertex[i]].x);
+		}
+		if (!m->dot_texture.empty() && !m->face_index_texture.empty()) {
+			glTexCoord2fv(&m->dot_texture[m->face_index_texture[i]].x);
+		}
+		// color
+		Vec3f offset = (m->dot_vertex[m->face_index_vertex[i]]);
+		//
+		glColor3f(fabs(sin(offset.x)), fabs(cos(offset.y)), fabs(offset.z));
+		glVertex3fv(&m->dot_vertex[m->face_index_vertex[i]].x);
+	}
+
+	glEnd();
+	glEndList();
+	return listID;
+}
+
 void toggleReflection() {
 	if (isReflectionOn) {
 		isReflectionOn = false;
