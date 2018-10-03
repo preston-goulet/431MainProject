@@ -38,8 +38,8 @@ float jetPositionX = 0.0;
 float jetPositionY = 100.0;
 float jetPositionZ = 0.0;
 
-
 const int perlinMeshSize = 80000;
+
 float meshSize = (perlinMeshSize - 1) / 2;
 int cameraSpeed = 1;
 int boxSpeed = 10;
