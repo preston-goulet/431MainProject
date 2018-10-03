@@ -129,8 +129,10 @@
     <ClInclude Include="controls.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="noise.h" />
+    <ClInclude Include="particles.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="texture.h" />
+    <ClInclude Include="timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

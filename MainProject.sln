@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.28010.2016
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MainProject", "Quiz2.vcxproj", "{5CF6A7C0-1A44-4A62-A113-EB5BEECDCE09}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B5725830-DC97-4229-96AB-EAA7AA51E6F9}"
+	ProjectSection(SolutionItems) = preProject
+		particles.h = particles.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
