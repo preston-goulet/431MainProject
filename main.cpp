@@ -330,6 +330,7 @@ void display(void) {
 	glDisable(GL_BLEND);
 	glEnable(GL_LIGHT0);
 
+
 	// jet
 	glPushMatrix();
 	glTranslatef(boxPositionX, boxPositionY, boxPositionZ);
@@ -352,6 +353,12 @@ void display(void) {
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 
+	//=======================================================================
+	// Lighting disabled from here on to allow other colors on the screen
+	//=======================================================================
+
+	glDisable(GL_LIGHTING);
+
 	// texto
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -360,7 +367,7 @@ void display(void) {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glColor3f(1.0, 1.0, 1.0);
+	glColor3f(0.0, 1.0, 0.0);
 	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
 	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
 	//renderBitmapString(0.0, window_height - 39.0f, 0.0f, "Use I, J, K and L to move the box");
@@ -373,18 +380,18 @@ void display(void) {
 	//=====================================
 	// Second Viewport
 	//=====================================
-	glViewport(0, 0, window_width / 2, window_height / 4);///////////////////////////////////////////////////////////Second viewport
+	glViewport(0, 0, window_width / 4, window_height / 4);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
 	// Draw box for hud
-	glColor3f(0.941, 0.902, 0.549);
+	//glColor3f(0.941, 0.902, 0.549);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
 	gluOrtho2D(0.0, 1200.0, 0.0, 250.0);
 	
-	glColor3f(0.941, 0.902, 0.549);
+	glColor3f(.200, .200, .200);
 	//Bottom tunnel
 	glShadeModel(GL_FLAT);
 	glBegin(GL_QUADS);
@@ -396,7 +403,7 @@ void display(void) {
 
 	
 	glPopMatrix();
-
+	glEnable(GL_LIGHTING);
 	glutSwapBuffers();
 }
 
