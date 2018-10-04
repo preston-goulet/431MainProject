@@ -16,10 +16,10 @@
 
 
 // global
-Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8;
+Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9;
 GLuint display1, display2, display3, display4, display5, display6, display7;
 GLuint textures[5];
-GLuint jetMesh;
+GLuint jetMesh, runway;
 GLuint boundingBox;
 
 vector<Points> box_spawn;
@@ -104,9 +104,7 @@ void drawParticles() {
 		glPopMatrix();
 		curr = curr->next;
 	}
-
 }
-
 
 // init
 void init() {
@@ -132,6 +130,8 @@ void init() {
 	mesh6 = createPlane(boundaryMeshSize, boundaryMeshSize, boundaryMeshSize/10);
 	mesh7 = createCube();
 	mesh8 = loadFile("OBJfiles/f-16.obj");
+	mesh9 = createPlane(2000, 2000, 2000);
+
 	
 	// normals
 	calculateNormalPerFace(mesh1);
@@ -142,6 +142,7 @@ void init() {
 	calculateNormalPerFace(mesh6);
 	calculateNormalPerFace(mesh7);
 	calculateNormalPerFace(mesh8);
+	calculateNormalPerFace(mesh9);
 	calculateNormalPerVertex(mesh1);
 	calculateNormalPerVertex(mesh2);
 	calculateNormalPerVertex(mesh3);
@@ -150,6 +151,7 @@ void init() {
 	calculateNormalPerVertex(mesh6);
 	calculateNormalPerVertex(mesh7);
 	calculateNormalPerVertex(mesh8);
+	calculateNormalPerVertex(mesh9);
 
 	calculateBoundingPoints(mesh8);
 	
@@ -161,6 +163,7 @@ void init() {
 	loadBMP_custom(textures, "_BMP_files/cubesky.bmp", 4);
 	codedTexture(textures, 5, 2); //Fire texture - noise fire. Type=2
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
+	loadBMP_custom(textures, "_BMP_files/runway.bmp", 7);
 	
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
@@ -171,6 +174,7 @@ void init() {
 	display6 = meshToDisplayList(mesh6, 6, textures[5]);//Lava
 	display7 = meshToDisplayList(mesh7, 7, textures[6]);
 	jetMesh = meshToDisplayListObjects(mesh8, 8);
+	runway = meshToDisplayList(mesh9, 10, textures[7]);
 
 	boundingBox = boundingBoxToDisplayList(mesh8, 9);
 	
@@ -222,8 +226,14 @@ void renderBitmapString(float x, float y, float z, const char *string) {
 
 // display
 void display(void) {
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	light_position[0] = 500 + cos(lightAngle);
+	light_position[1] = lightHeight;
+	light_position[2] = 500 + sin(lightAngle);
+	light_position[3] = 0.0; // directional light
+	// Calculate Shadow matrix
+	shadowMatrix(shadow_matrix, floor_normal, light_position);
 
 	// projection
 	glMatrixMode(GL_PROJECTION);
@@ -318,7 +328,9 @@ void display(void) {
 	glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); //Keep the pixel
 
-	//Jet Reflection
+	//================================
+	//	Jet Reflection
+	//================================
 	glPushMatrix();	
 		glScalef(1.0, -1.0, 1.0);
 		glTranslatef(camera_x, 14, camera_z - 500);
@@ -341,17 +353,77 @@ void display(void) {
 	float time = calculate_frame_time();
 	ps.update(time);
 	ps2.update(time);
-	for (int i = 0; i < 50; i++) {
-		ps.remove();
-	}
+	ps2.remove();
 	ps.remove();
 	glPushMatrix();
+	glScalef(1.0, -1.0, 1.0);
 	glTranslatef(camera_x + 10, 5, camera_z - 400);
 	glRotatef(90, 1, 0, 0);
 	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
 	glScalef(.1, .1, .1);
 	drawParticles();//flames
 	glPopMatrix();
+
+	//========================================
+	//	Shadows
+	//========================================
+	glPushMatrix();
+	// Tell GL new light source position
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	// Shadows
+	if (areShadowsOn) {
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF);
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	}
+	// Draw floor using blending to blend in reflection
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(1.0, 1.0, 1.0, 0.75);
+	glPushMatrix();
+	glDisable(GL_LIGHTING);
+
+	//runway
+	for (int x = 0; x < 10; x++) {
+		glPushMatrix();
+		glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
+		glCallList(runway);
+		glPopMatrix();
+	}
+
+	glEnable(GL_LIGHTING);
+	glPopMatrix();
+	glDisable(GL_BLEND);
+
+
+	// Shadows
+	if (areShadowsOn) {
+		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
+		glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+		//glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); 
+		//  To eliminate depth buffer artifacts, use glEnable(GL_POLYGON_OFFSET_FILL);
+		// Render 50% black shadow color on top of whatever the floor appareance is
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_LIGHTING);  /* Force the 50% black. */
+		glColor4f(0.0, 0.0, 0.0, 0.5);
+		glPushMatrix();
+		// Project the shadow
+		glMultMatrixf((GLfloat *)shadow_matrix);
+		// boxes
+		glDisable(GL_DEPTH_TEST);
+
+		//glTranslatef(camera_x, camera_y - 100, camera_z - 500);
+		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glTranslatef(lookx, looky, lookz);
+		glScalef(10, -10, 10);
+		glCallList(jetMesh);
+
+		glEnable(GL_DEPTH_TEST);
+		glPopMatrix();
+		glDisable(GL_BLEND);
+		glEnable(GL_LIGHTING);
+	}
 
 
 	// STENCIL-STEP 4. disable it
@@ -419,6 +491,17 @@ void display(void) {
 		glCallList(display1);
 	glPopMatrix();
 
+	//runway
+	for (int x = 0; x < 10; x++) {
+		glPushMatrix();
+		glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
+		glCallList(runway);
+		glPopMatrix();
+	}
+	
+	if (isLightArrowOn) {
+		drawLightArrow();
+	}
 
 	//end
 	glMatrixMode(GL_PROJECTION);
