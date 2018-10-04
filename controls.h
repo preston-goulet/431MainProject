@@ -44,6 +44,10 @@ float meshSize = (perlinMeshSize - 1) / 2;
 int cameraSpeed = 1;
 int boxSpeed = 10;
 
+float runway_x = -10;
+float runway_y = 50;
+float runway_z = -1000;
+
 void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 	for (Vec3f i : mesh->dot_vertex) {
 		if (abs(jetPositionX - (i.x - xOffset)) < 200 && abs(jetPositionZ - (i.z - zOffset)) < 200) {
