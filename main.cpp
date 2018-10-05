@@ -181,7 +181,7 @@ void init() {
 	// light
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
-	GLfloat light_ambient[]  = { 255.0, 255.0, 255.0, 1.0 };
+	GLfloat light_ambient[]  = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat light_diffuse[]  = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat light_position[] = { 0.0, 0.0, 1.0, 0.0 };
@@ -205,6 +205,13 @@ void init() {
 	glFogf(GL_FOG_END, 70000);
 
 	glClearStencil(0);
+
+	// floor vertex
+	dot_vertex_floor.push_back(Vec3<GLfloat>(-2000.0, 0.0, 2000.0));
+	dot_vertex_floor.push_back(Vec3<GLfloat>(2000.0, 0.0, 2000.0));
+	dot_vertex_floor.push_back(Vec3<GLfloat>(2000.0, 0.0, -2000.0));
+	dot_vertex_floor.push_back(Vec3<GLfloat>(-2000.0, 0.0, -2000.0));
+	calculate_floor_normal(&floor_normal, dot_vertex_floor);
 }
 
 // reshape
@@ -228,10 +235,13 @@ void renderBitmapString(float x, float y, float z, const char *string) {
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	light_position[0] = 500 + cos(lightAngle);
+	// light source position
+	light_position[0] = 500 * cos(lightAngle) + 1000;
 	light_position[1] = lightHeight;
-	light_position[2] = 500 + sin(lightAngle);
+	light_position[2] = 500 * sin(lightAngle) -1000;
 	light_position[3] = 0.0; // directional light
+	lightAngle += 0.0005;
+
 	// Calculate Shadow matrix
 	shadowMatrix(shadow_matrix, floor_normal, light_position);
 
@@ -308,6 +318,66 @@ void display(void) {
 	glCallList(display5);
 	glPopMatrix();
 
+	//========================================
+	//	Shadows
+	//========================================
+	glPushMatrix();
+	// Tell GL new light source position
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	// Shadows
+	if (areShadowsOn) {
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF);
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	}
+	// Draw floor using blending to blend in reflection
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(1.0, 1.0, 1.0, 0.5);
+	glPushMatrix();
+	glDisable(GL_LIGHTING);
+
+	//runway
+	for (int x = 0; x < 10; x++) {
+		glPushMatrix();
+		glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
+		glCallList(runway);
+		glPopMatrix();
+	}
+
+	glEnable(GL_LIGHTING);
+	glPopMatrix();
+	glDisable(GL_BLEND);
+
+	// Shadows
+	if (areShadowsOn) {
+		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
+		glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+		//glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+		//  To eliminate depth buffer artifacts, use glEnable(GL_POLYGON_OFFSET_FILL);
+		// Render 50% black shadow color on top of whatever the floor appareance is
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_LIGHTING);  /* Force the 50% black. */
+		glColor4f(0.0, 0.0, 0.0, 0.5);
+		glPushMatrix();
+		// Project the shadow
+		glMultMatrixf((GLfloat *)shadow_matrix);
+		// boxes
+		glDisable(GL_DEPTH_TEST);
+
+		glTranslatef(camera_x, 20, camera_z - 500);
+		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glTranslatef(lookx, looky, lookz);
+		glScalef(10, 10, 10);
+		glCallList(jetMesh);
+
+		glEnable(GL_DEPTH_TEST);
+		glPopMatrix();
+		glDisable(GL_BLEND);
+		glEnable(GL_LIGHTING);
+	}
+
 	// ===== STENCIL DRAW ============================================================================
 
 	glEnable(GL_STENCIL_TEST); //Start using the stencil
@@ -363,68 +433,6 @@ void display(void) {
 	glScalef(.1, .1, .1);
 	drawParticles();//flames
 	glPopMatrix();
-
-	//========================================
-	//	Shadows
-	//========================================
-	glPushMatrix();
-	// Tell GL new light source position
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	// Shadows
-	if (areShadowsOn) {
-		glEnable(GL_STENCIL_TEST);
-		glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF);
-		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	}
-	// Draw floor using blending to blend in reflection
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(1.0, 1.0, 1.0, 0.75);
-	glPushMatrix();
-	glDisable(GL_LIGHTING);
-
-	//runway
-	for (int x = 0; x < 10; x++) {
-		glPushMatrix();
-		glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
-		glCallList(runway);
-		glPopMatrix();
-	}
-
-	glEnable(GL_LIGHTING);
-	glPopMatrix();
-	glDisable(GL_BLEND);
-
-
-	// Shadows
-	if (areShadowsOn) {
-		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
-		glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
-		//glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); 
-		//  To eliminate depth buffer artifacts, use glEnable(GL_POLYGON_OFFSET_FILL);
-		// Render 50% black shadow color on top of whatever the floor appareance is
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_LIGHTING);  /* Force the 50% black. */
-		glColor4f(0.0, 0.0, 0.0, 0.5);
-		glPushMatrix();
-		// Project the shadow
-		glMultMatrixf((GLfloat *)shadow_matrix);
-		// boxes
-		glDisable(GL_DEPTH_TEST);
-
-		//glTranslatef(camera_x, camera_y - 100, camera_z - 500);
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
-		glScalef(10, -10, 10);
-		glCallList(jetMesh);
-
-		glEnable(GL_DEPTH_TEST);
-		glPopMatrix();
-		glDisable(GL_BLEND);
-		glEnable(GL_LIGHTING);
-	}
-
 
 	// STENCIL-STEP 4. disable it
 	glDisable(GL_STENCIL_TEST);
