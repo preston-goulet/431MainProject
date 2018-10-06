@@ -14,13 +14,15 @@ bool isReflectionOn = true;
 bool isFogOn = true;
 bool areBoundingBoxesOn = true;
 bool areParticlesOn = true;
+bool areShadowsOn = true;
+bool isLightArrowOn = true;
 
 GLfloat light_position[4];
 GLfloat shadow_matrix[4][4];
 Vec3f floor_normal;
 vector<Vec3f> dot_vertex_floor;
-float lightAngle = 0.0, lightHeight = 100;
-int renderShadow = 1;
+float lightAngle = 0.0, lightHeight = 1000;
+
 
 // calculate floor normal
 void calculate_floor_normal(Vec3f *plane, vector<Vec3f> dot_floor) {
@@ -60,7 +62,7 @@ void drawLightArrow() {
 	// draw arrowhead. 
 	glTranslatef(light_position[0], light_position[1], light_position[2]);
 	glRotatef(lightAngle * -180.0 / 3.141592, 0, 1, 0);
-	//glRotatef(atan(light_position[1] / 500) * 180.0 / 3.141592, 0, 0, 1);
+	glRotatef(atan(light_position[1] / 500) * 180.0 / 3.141592, 0, 0, 1);
 	glBegin(GL_TRIANGLE_FAN);
 	glVertex3f(0, 0, 0);
 	glVertex3f(20, 10, 10);
@@ -100,7 +102,7 @@ GLuint meshToDisplayList(Mesh* m, int id, int texture) {
 		Vec3f offset = (m->dot_vertex[m->face_index_vertex[i]]);
 
 		// VERTEX
-		glColor3f(fabs(sin(offset.x)), fabs(cos(offset.y)), fabs(offset.z));
+		//glColor3f(fabs(sin(offset.x)), fabs(cos(offset.y)), fabs(offset.z));
 		glVertex3fv(&m->dot_vertex[m->face_index_vertex[i]].x);
 	}
 	glEnd();
@@ -218,6 +220,24 @@ void toggleParticles() {
 	}
 }
 
+void toggleShadows() {
+	if (areShadowsOn) {
+		areShadowsOn = false;
+	}
+	else {
+		areShadowsOn = true;
+	}
+}
+
+void toggleLightArrow() {
+	if (isLightArrowOn) {
+		isLightArrowOn = false;
+	}
+	else {
+		isLightArrowOn = true;
+	}
+}
+
 void menuListener(int option) {
 	switch (option) {
 	case 0:
@@ -232,6 +252,12 @@ void menuListener(int option) {
 	case 3:
 		toggleParticles();
 		break;
+	case 4:
+		toggleShadows();
+		break;
+	case 5:
+		toggleLightArrow();
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -244,6 +270,8 @@ void addMenu() {
 	glutAddMenuEntry("Toggle Bounding Boxes", 1);
 	glutAddMenuEntry("Toggle Fog", 2);
 	glutAddMenuEntry("Toggle Particles", 3);
+	glutAddMenuEntry("Toggle Shadow", 4);
+	glutAddMenuEntry("Toggle Light Arrow", 5);
 
 	// create main menu
 	int menu = glutCreateMenu(menuListener);
