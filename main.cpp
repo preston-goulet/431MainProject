@@ -1,6 +1,7 @@
 /**
  * SER 431
  * https://speakerdeck.com/javiergs/ser431-lecture-04
+ By Preston Goulet(pegoulet) & Taylor Greeff(tgreeff)
  **/
 
 #include <stdlib.h>
@@ -13,7 +14,9 @@
 #include "controls.h"
 #include "particles.h"
 #include "timer.h"
-
+#include "Object.h"
+#include "Curve.h"
+#include "CurveFollower.h"
 
 // global
 Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9;

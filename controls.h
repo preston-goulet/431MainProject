@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <GL/glut.h>
+#include "Object.h"
 
 int window_width = 800, window_height = 800;
 float window_ratio = 1.0;

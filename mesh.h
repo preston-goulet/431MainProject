@@ -539,3 +539,17 @@ void calculateBoundingPoints(Mesh* m) {
 	
 }
 
+
+void makeMeshFrom2Lines(vector<Vec3f>* top, vector<Vec3f>* bottom) {
+
+	int length = top->size();
+	for (int x = 0; x < length - 1; x++) {
+		glBegin(GL_QUADS);
+		glVertex3f(top->at(x).x, top->at(x).y, top->at(x).z);
+
+		glVertex3f(bottom->at(x).x, bottom->at(x).y, bottom->at(x).z);
+		glVertex3f(bottom->at(x + 1).x, bottom->at(x + 1).y, bottom->at(x + 1).z);
+		glVertex3f(top->at(x + 1).x, top->at(x + 1).y, top->at(x + 1).z);
+		glEnd();
+	}
+}

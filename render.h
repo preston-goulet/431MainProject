@@ -280,3 +280,26 @@ void addMenu() {
 	// attach the menu to the right button
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
+
+void drawPoints(Vec3f* start, Vec3f* stop, Vec3f* tan1, Vec3f* tan2) {
+	unsigned int N = 128;
+
+	glBegin(GL_LINE_STRIP);
+	// use the parametric time value 0 to 1
+	for (int i = 0; i != N; ++i) {
+		float t = (float)i / (N - 1);
+		// calculate blending functions
+		float b0 = 2 * t*t*t - 3 * t*t + 1;
+		float b1 = -2 * t*t*t + 3 * t*t;
+		float b2 = t * t*t - 2 * t*t + t;
+		float b3 = t * t*t - t * t;
+		// calculate the x, y and z of the curve point
+		float x = b0 * start->x + b1 * stop->x + b2 * tan1->x + b3 * tan2->x;
+		float y = b0 * start->y + b1 * stop->y + b2 * tan1->y + b3 * tan2->y;
+		float z = b0 * start->z + b1 * stop->z + b2 * tan1->z + b3 * tan2->z;
+		// specify the point
+		glVertex3f(x, y, z);
+	}
+	glEnd();
+
+}
