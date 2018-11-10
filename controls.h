@@ -7,7 +7,7 @@
 
 #include <math.h>
 #include <GL/glut.h>
-#include "Object.h"
+#include "GameObject.h"
 
 int window_width = 800, window_height = 800;
 float window_ratio = 1.0;
@@ -26,7 +26,7 @@ float camera_y = 500.0;
 float camera_z = 600.0;
 
 float camera_rotate = 0;
-float jet_rotate = 0;
+
 
 float camera_viewing_x = 0.0;
 float camera_viewing_y = 300.0;
@@ -35,9 +35,9 @@ float camera_viewing_z = 0.0;
 float total_moving_angle = 0.0;
 
 //Moving box values
-float jetPositionX = 0.0;
-float jetPositionY = 100.0;
-float jetPositionZ = 0.0;
+GameObject jet = GameObject(
+	0.0f, 100.0f, 0.0f,
+	0.0f, 0.0f, 1.0f);
 
 const int perlinMeshSize = 80000;
 
@@ -51,8 +51,10 @@ float runway_z = -1000;
 
 void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 	for (Vec3f i : mesh->dot_vertex) {
-		if (abs(jetPositionX - (i.x - xOffset)) < 200 && abs(jetPositionZ - (i.z - zOffset)) < 200) {
-			jetPositionY = 10 + i.y;
+		float x = jet.getPosX();
+		float z = jet.getPosZ();
+		if (abs(x - (i.x - xOffset)) < 200 && abs(z - (i.z - zOffset)) < 200) {
+			jet.setPosY(10 + i.y);
 		}
 	}
 }

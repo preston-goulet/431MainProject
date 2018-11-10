@@ -79,3 +79,67 @@ public:
 
 ParticleSystem ps;
 ParticleSystem ps2;
+
+// draw particles
+void drawParticles() {
+	Particle* curr = ps.particle_head;
+	// glPointSize(2);
+	// glBegin(GL_POINTS);
+	// while (curr) {
+	//   glVertex3fv(curr->position);
+	//	 curr = curr->next;
+	// }
+	// glEnd();
+	while (curr) {
+		glPushMatrix();
+		glScalef(100.0, 100.0, 100.0);
+		glTranslatef(curr->position[0], curr->position[1], curr->position[2]);
+		glScalef(0.2, 0.2, 0.2);
+		glColor4f(curr->color[0], curr->color[1], curr->color[2], 0.3);
+		//front
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(0, 0, 0); // vertices of the triangle 1
+		glVertex3f(0, 1, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(1, 1, 0);
+		glEnd();
+		//back
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(0, 0, -1); // vertices of the triangle 1
+		glVertex3f(0, 1, -1);
+		glVertex3f(1, 1, -1);
+		glVertex3f(1, 0, -1);
+		glEnd();
+		//left
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(0, 0, -1); // vertices of the triangle 1
+		glVertex3f(0, 1, -1);
+		glVertex3f(0, 1, 0);
+		glVertex3f(0, 0, 0);
+		glEnd();
+		//right
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(1, 0, -1); // vertices of the triangle 1
+		glVertex3f(1, 0, 0);
+		glVertex3f(1, 1, 0);
+		glVertex3f(1, 1, -1);
+		glEnd();
+		//top
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(1, 1, -1); // vertices of the triangle 1
+		glVertex3f(1, 1, 0);
+		glVertex3f(0, 1, 0);
+		glVertex3f(0, 1, -1);
+		glEnd();
+		//bottom
+		glBegin(GL_POLYGON); // fill connected polygon
+		glVertex3f(1, 0, -1); // vertices of the triangle 1
+		glVertex3f(1, 0, 0);
+		glVertex3f(0, 0, 0);
+		glVertex3f(0, 0, -1);
+		glEnd();
+
+		glPopMatrix();
+		curr = curr->next;
+	}
+}

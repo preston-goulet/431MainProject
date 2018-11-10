@@ -14,7 +14,7 @@
 #include "controls.h"
 #include "particles.h"
 #include "timer.h"
-#include "Object.h"
+#include "GameObject.h"
 #include "Curve.h"
 #include "CurveFollower.h"
 
@@ -45,69 +45,7 @@ float angle = 0;
 float playerLook = 0;
 
 
-// draw particles
-void drawParticles() {
-	Particle* curr = ps.particle_head;
-	// glPointSize(2);
-	// glBegin(GL_POINTS);
-	// while (curr) {
-	//   glVertex3fv(curr->position);
-	//	 curr = curr->next;
-	// }
-	// glEnd();
-	while (curr) {
-		glPushMatrix();
-		glScalef(100.0, 100.0, 100.0);
-		glTranslatef(curr->position[0], curr->position[1], curr->position[2]);
-		glScalef(0.2, 0.2, 0.2);
-		glColor4f(curr->color[0], curr->color[1], curr->color[2], 0.3);
-		//front
-		glBegin(GL_POLYGON); // fill connected polygon
-		glVertex3f(0, 0, 0); // vertices of the triangle 1
-		glVertex3f(0, 1, 0);
-		glVertex3f(1, 1, 0);
-		glVertex3f(1, 1, 0);
-		glEnd();
-		//back
-		glBegin(GL_POLYGON); // fill connected polygon
-		glVertex3f(0, 0, -1); // vertices of the triangle 1
-		glVertex3f(0, 1, -1);
-		glVertex3f(1, 1, -1);
-		glVertex3f(1, 0, -1);
-		glEnd();
-		//left
-		glBegin(GL_POLYGON); // fill connected polygon
-		glVertex3f(0, 0, -1); // vertices of the triangle 1
-		glVertex3f(0, 1, -1);
-		glVertex3f(0, 1, 0);
-		glVertex3f(0, 0, 0);
-		glEnd();
-		//right
-		glBegin(GL_POLYGON); // fill connected polygon
-		glVertex3f(1, 0, -1); // vertices of the triangle 1
-		glVertex3f(1, 0, 0);
-		glVertex3f(1, 1, 0);
-		glVertex3f(1, 1, -1);
-		glEnd();
-		//top
-		glBegin(GL_POLYGON); // fill connected polygon
-		glVertex3f(1, 1, -1); // vertices of the triangle 1
-		glVertex3f(1, 1, 0);
-		glVertex3f(0, 1, 0);
-		glVertex3f(0, 1, -1);
-		glEnd();
-		//bottom
-		glBegin(GL_POLYGON); // fill connected polygon
-		glVertex3f(1, 0, -1); // vertices of the triangle 1
-		glVertex3f(1, 0, 0);
-		glVertex3f(0, 0, 0);
-		glVertex3f(0, 0, -1);
-		glEnd();
 
-		glPopMatrix();
-		curr = curr->next;
-	}
-}
 
 // init
 void init() {
@@ -244,6 +182,9 @@ void display(void) {
 	light_position[2] = 500 * sin(lightAngle) -1000;
 	light_position[3] = 0.0; // directional light
 	lightAngle += 0.0005;
+	
+	updateParticles();
+	updateGameObjects();
 
 	// Calculate Shadow matrix
 	shadowMatrix(shadow_matrix, floor_normal, light_position);
@@ -370,7 +311,7 @@ void display(void) {
 		glDisable(GL_DEPTH_TEST);
 
 		glTranslatef(camera_x, 20, camera_z - 500);
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
 		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(jetMesh);
@@ -407,7 +348,7 @@ void display(void) {
 	glPushMatrix();	
 		glScalef(1.0, -1.0, 1.0);
 		glTranslatef(camera_x, 14, camera_z - 500);
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
 		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(jetMesh); //display7
@@ -416,23 +357,12 @@ void display(void) {
 	//============================================
 	//	Exhaust flames reflection
 	//============================================
-	if (areParticlesOn) {
-		//Particles with box 1
-		for (int i = 0; i < 50; i++) {
-			ps.add();
-		}
-		ps2.add();
-	}
-	float time = calculate_frame_time();
-	ps.update(time);
-	ps2.update(time);
-	ps2.remove();
-	ps.remove();
+	
 	glPushMatrix();
 	glScalef(1.0, -1.0, 1.0);
 	glTranslatef(camera_x + 10, 5, camera_z - 400);
 	glRotatef(90, 1, 0, 0);
-	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
+	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
 	glScalef(.1, .1, .1);
 	drawParticles();//flames
 	glPopMatrix();
@@ -440,7 +370,9 @@ void display(void) {
 	// STENCIL-STEP 4. disable it
 	glDisable(GL_STENCIL_TEST);
 
-	//========Regular 3d environment=====================================
+	//=====================================
+	//	Regular 3d environment
+	//=====================================
 	glEnable(GL_BLEND);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_LIGHT0);
@@ -454,14 +386,12 @@ void display(void) {
 	glCallList(display6);
 	glPopMatrix();
 
-	//============================================
-	//	Exhaust flames
-	//============================================
+	//Exhaust flames
 	ps.remove();
 	glPushMatrix();
 	glTranslatef(camera_x + 12, camera_y - 60, camera_z - 450);
 	glRotatef(90, 1, 0, 0);
-	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
+	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
 	glScalef(.1, .1, .1);
 	drawParticles();//flames
 	glPopMatrix();
@@ -476,7 +406,7 @@ void display(void) {
 		glDisable(GL_LIGHTING);
 		glColor3f(1.0, 1.0, 0.0);
 		glTranslatef(camera_x, camera_y - 100, camera_z - 500);
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
 		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(boundingBox);
@@ -490,7 +420,7 @@ void display(void) {
 	//==========================
 	glPushMatrix();
 		glTranslatef( camera_x, camera_y - 100, camera_z - 500 );
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
 		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(jetMesh); 
@@ -543,7 +473,6 @@ void display(void) {
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	
-
 	//=====================================
 	// Second Viewport
 	//=====================================
@@ -566,7 +495,6 @@ void display(void) {
 		glVertex2f( window_width, window_height ); //top right
 		glVertex2f( 0, window_height );//top left
 	glEnd();
-
 	
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
@@ -604,20 +532,41 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 			break;
 	}
 
-	if (jetPositionX > meshSize) {
-		jetPositionX = meshSize;
+	if (jet.position[0] > meshSize) {
+		jet.position[0] = meshSize;
 	}
-	else if (jetPositionX < -meshSize) {
-		jetPositionX = -meshSize;
+	else if (jet.position[0] < -meshSize) {
+		jet.position[0] = -meshSize;
 	}
 
 	// box Z verification
-	if (jetPositionZ > meshSize) {
-		jetPositionZ = meshSize;
+	if (jet.position[2] > meshSize) {
+		jet.position[2] = meshSize;
 	}
-	else if (jetPositionZ < -meshSize) {
-		jetPositionZ = -meshSize;
+	else if (jet.position[2] < -meshSize) {
+		jet.position[2] = -meshSize;
 	}
+}
+
+void updateParticles() {
+	if (areParticlesOn) {
+		//Particles with box 1
+		for (int i = 0; i < 50; i++) {
+			ps.add();
+		}
+		ps2.add();
+	}
+	float time = calculate_frame_time();
+	
+	ps.update(time);
+	ps2.update(time);
+	ps2.remove();
+	ps.remove();
+}
+
+void updateGameObjects() {
+	float time = calculate_frame_time();
+	jet.update(time);
 }
 
 // callback function for arrows
@@ -643,13 +592,13 @@ void specialkeys(int key, int x, int y) {
 		angle -= 0.1f;
 		orientMe(angle);
 		playerLook += 5;
-		jet_rotate += 5;
+		jet.rotation[1] += 5;
 		break;
 	case GLUT_KEY_RIGHT:
 		angle += 0.1f;
 		orientMe(angle);
 		playerLook -= 5;
-		jet_rotate -= 5;
+		jet.rotation[1] -= 5;
 		break;
 	}
 
