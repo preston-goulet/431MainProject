@@ -13,18 +13,19 @@
 #include "controls.h"
 #include "particles.h"
 #include "timer.h"
+#include "nurbs_flag.h"
 
 
 // global
-Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9;
-GLuint display1, display2, display3, display4, display5, display6, display7;
+Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9, *mesh11;
+GLuint display1, display2, display3, display4, display5, display6, display7, displayBrick;
 GLuint textures[5];
 GLuint jetMesh, runway;
 GLuint boundingBox;
 
 vector<Points> box_spawn;
 
-const int boundaryMeshSize = 60000;
+const int boundaryMeshSize = 50000;
 const int skyBoxMeshSize = 80000;
 
 bool doOnce = true;
@@ -33,13 +34,14 @@ float randX = 0;
 float randZ = 0;
 
 int countDown = 10000;
+bool raiseAndLower = false;
 
 
 //Moving Flat
 //float camera_x = 0.0f, camera_y = 20.0f, camera_z = 5.0f;
 float lookx = 0.0f, looky = 0.0f, lookz = -1.0f;
 float px, py;//for arrow
-int moveSpeed = 50;
+int moveSpeed = 500;//50
 float angle = 0;
 float playerLook = 0;
 
@@ -133,6 +135,7 @@ void init() {
 	mesh7 = createCube();
 	mesh8 = loadFile("OBJfiles/f-16.obj");
 	mesh9 = createPlane(2000, 2000, 2000);
+	mesh11 = createPlane(2000, 2000, 200);
 
 	
 	// normals
@@ -145,6 +148,7 @@ void init() {
 	calculateNormalPerFace(mesh7);
 	calculateNormalPerFace(mesh8);
 	calculateNormalPerFace(mesh9);
+	calculateNormalPerFace(mesh11);
 	calculateNormalPerVertex(mesh1);
 	calculateNormalPerVertex(mesh2);
 	calculateNormalPerVertex(mesh3);
@@ -154,6 +158,7 @@ void init() {
 	calculateNormalPerVertex(mesh7);
 	calculateNormalPerVertex(mesh8);
 	calculateNormalPerVertex(mesh9);
+	calculateNormalPerVertex(mesh11);
 
 	calculateBoundingPoints(mesh8);
 	
@@ -166,6 +171,7 @@ void init() {
 	codedTexture(textures, 5, 2); //Fire texture - noise fire. Type=2
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
 	loadBMP_custom(textures, "_BMP_files/runway.bmp", 7);
+	loadBMP_custom(textures, "_BMP_files/brick.bmp", 8);
 	
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
@@ -177,6 +183,7 @@ void init() {
 	display7 = meshToDisplayList(mesh7, 7, textures[6]);
 	jetMesh = meshToDisplayListObjects(mesh8, 8);
 	runway = meshToDisplayList(mesh9, 10, textures[7]);
+	displayBrick = meshToDisplayList(mesh11, 11, textures[8]);
 
 	boundingBox = boundingBoxToDisplayList(mesh8, 9);
 	
@@ -214,6 +221,27 @@ void init() {
 	dot_vertex_floor.push_back(Vec3<GLfloat>(2000.0, 0.0, -2000.0));
 	dot_vertex_floor.push_back(Vec3<GLfloat>(-2000.0, 0.0, -2000.0));
 	calculate_floor_normal(&floor_normal, dot_vertex_floor);
+
+	//=========================================
+	// Nurb Flab
+	//=========================================
+
+	//Original
+	nurbsflag = gluNewNurbsRenderer();
+	gluNurbsProperty(nurbsflag, GLU_SAMPLING_TOLERANCE, 100.0);
+	gluNurbsProperty(nurbsflag, GLU_DISPLAY_MODE, GLU_FILL); //GLU_OUTLINE_POLYGON
+
+	//Reflection
+	nurbsflag_two = gluNewNurbsRenderer();
+	gluNurbsProperty(nurbsflag_two, GLU_SAMPLING_TOLERANCE, 100.0);
+	gluNurbsProperty(nurbsflag_two, GLU_DISPLAY_MODE, GLU_FILL); //GLU_OUTLINE_POLYGON
+
+	//Shadow
+	nurbsflag_three = gluNewNurbsRenderer();
+	gluNurbsProperty(nurbsflag_three, GLU_SAMPLING_TOLERANCE, 100.0);
+	gluNurbsProperty(nurbsflag_three, GLU_DISPLAY_MODE, GLU_FILL); //GLU_OUTLINE_POLYGON
+
+	generateRandomNumber();
 }
 
 // reshape
@@ -235,6 +263,7 @@ void renderBitmapString(float x, float y, float z, const char *string) {
 
 // display
 void display(void) {
+	glEnable(GL_CULL_FACE);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	// light source position
@@ -255,7 +284,7 @@ void display(void) {
 	gluPerspective(45, window_ratio, 10, 100000);
 	// view
 	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
+	//glPushMatrix();
 	glLoadIdentity();
 
 	//===========================================================================
@@ -271,173 +300,139 @@ void display(void) {
 		glTranslatef(0.0f, 0.0f, 0.0f);
 	glPopMatrix();
 
-
-	//=======================================
-	// Box Targets
-	//=======================================
-	//box_spawn.push_back(Points());
-	if (doOnce == true) {
-		for (int i = 0; i < 3000; i++) {
-			box_spawn.push_back(Points());
-			randX = rand() % 5000 + (-5000);
-			randY = rand() % 1000 + 200;
-			randZ = rand() % 5000 + (-5000);
-
-			box_spawn[i].x = randX;
-			box_spawn[i].y = randY;
-			box_spawn[i].z = randZ;
+	if (raiseAndLower) {
+		if ( lowerBox == false && boxMovement < 200 ) {
+			boxMovement += 1;
+				if (boxMovement > 199) {
+					lowerBox = true;
+				}
 		}
+		else {
+			boxMovement -= 1;
+				if (boxMovement == 0) {
+					raiseAndLower = false;
+					lowerBox = false;
+				}
+		}
+		
 	}
+	
 
-	// box 1
+	//====================
+	//	Draw Objects
+	//====================
+
+	//flag
 	glPushMatrix();
-		for (int i = 0; i < 1000; i++) {
-			glTranslatef( box_spawn[i].x, box_spawn[i].y, box_spawn[i].z );
-			glCallList(display2);
-		}
+	glTranslatef(400, shadowHeight + 700, playArea);
+	glScalef(100, 100, 100);
+	draw_nurb();
 	glPopMatrix();
 
-	//Box 2
+	//flag reflection
 	glPushMatrix();
-		for (int i = 100; i < 2000; i++) {
-			glTranslatef(box_spawn[i].x, box_spawn[i].y, box_spawn[i].z);
-			glCallList(display3);
-		}
+	glTranslatef(400, shadowHeight - 700, playArea);
+	glScalef(100, -100, 100);
+	draw_nurb2();
 	glPopMatrix();
 
-	// Box 3
+	// boxes reflections
 	glPushMatrix();
-		for (int i = 200; i < 3000; i++) {
-			glTranslatef(box_spawn[i].x, box_spawn[i].y, box_spawn[i].z);
-			glCallList(display4);
-		}
+		glTranslatef(0, shadowHeight, playArea);
+		glScalef(1.0, -10.0, 1.0);
+		glCallList(display2);
 	glPopMatrix();
-	doOnce = false;
-
-	// skybox
 	glPushMatrix();
-	glTranslatef(-skyBoxMeshSize / 2, -skyBoxMeshSize / 2, -skyBoxMeshSize / 2);
-	glCallList(display5);
+		glTranslatef(200, shadowHeight, playArea);
+		glScalef(1.0, -1.0, 1.0);
+		glCallList(display3);
+	glPopMatrix();
+	glPushMatrix();
+		glTranslatef(-200, shadowHeight, playArea);
+		glScalef(1.0, -1.0, 1.0);
+		glCallList(display4);
 	glPopMatrix();
 
-	//========================================
-	//	Shadows
-	//========================================
+	// areShadowsOn
+	// isReflectionOn
+
+
 	glPushMatrix();
-	// Tell GL new light source position
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	// Shadows
-	if (areShadowsOn) {
+	  // Tell GL new light source position
+	  glLightfv(GL_LIGHT0, GL_POSITION, light_position);	
+	  // Shadows
+	  if (areShadowsOn) {
 		glEnable(GL_STENCIL_TEST);
 		glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF);
 		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	}
-	// Draw floor using blending to blend in reflection
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(1.0, 1.0, 1.0, 0.5);
-	glPushMatrix();
-	glDisable(GL_LIGHTING);
+	  }
+	  // Draw floor using blending to blend in reflection
+	  glEnable(GL_BLEND);
+	  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      glColor4f(1.0, 1.0, 1.0, 0.3);
+	  glPushMatrix();
+			glDisable(GL_LIGHTING);
+			glTranslatef(-900, shadowHeight, -900 + playArea);
+			glCallList(displayBrick);
+			glEnable(GL_LIGHTING);
+	  glPopMatrix();
+	  glDisable(GL_BLEND);
+	  // Shadows
 
-	//runway
-	for (int x = 0; x < 10; x++) {
-		glPushMatrix();
-		glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
-		glCallList(runway);
-		glPopMatrix();
-	}
-
-	glEnable(GL_LIGHTING);
-	glPopMatrix();
-	glDisable(GL_BLEND);
-
-	// Shadows
-	if (areShadowsOn) {
+	  if (areShadowsOn) {
 		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
 		glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
-		//glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+		//glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); 
 		//  To eliminate depth buffer artifacts, use glEnable(GL_POLYGON_OFFSET_FILL);
 		// Render 50% black shadow color on top of whatever the floor appareance is
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_LIGHTING);  /* Force the 50% black. */
-		glColor4f(0.0, 0.0, 0.0, 0.5);
-		glPushMatrix();
-		// Project the shadow
-		glMultMatrixf((GLfloat *)shadow_matrix);
-		// boxes
-		glDisable(GL_DEPTH_TEST);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDisable(GL_LIGHTING);  /* Force the 50% black. */
+			glColor4f(0.0, 0.0, 0.0, 0.5);
+			glPushMatrix();
+				// Project the shadow
+				glMultMatrixf((GLfloat *)shadow_matrix);
+				// boxes
+				glDisable(GL_DEPTH_TEST);
+				glScalef(0, 10, 0);
+				glCallList(display2);
+				glTranslatef(200, shadowHeight, playArea);
+				glCallList(display3);
+				glTranslatef(-400, shadowHeight, playArea);
+				glCallList(display4);
 
-		glTranslatef(camera_x, 20, camera_z - 500);
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
-		glScalef(10, 10, 10);
-		glCallList(jetMesh);
-
-		glEnable(GL_DEPTH_TEST);
-		glPopMatrix();
+				glTranslatef(100, shadowHeight + 100, playArea + 100);
+				glScalef(100, 100, 100);
+				draw_nurb3();
+				glEnable(GL_DEPTH_TEST);
+			glPopMatrix();
 		glDisable(GL_BLEND);
 		glEnable(GL_LIGHTING);
-	}
+		// To eliminate depth buffer artifacts, use glDisable(GL_POLYGON_OFFSET_FILL);
+		glDisable(GL_STENCIL_TEST);
+	  }
 
-	// ===== STENCIL DRAW ============================================================================
-
-	glEnable(GL_STENCIL_TEST); //Start using the stencil
-	glDisable(GL_DEPTH_TEST);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); //Disable writing colors in frame buffer
-	glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF); //Place a 1 where rendered
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); 	//Replace where rendered
-	// PLAIN for the stencil
-	if (isReflectionOn) { //Add Toggle to reflection
-		glPushMatrix();
-		glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
-		glCallList(display6); //Water
-		glPopMatrix();
-	}
-
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); //Reenable color
-	glEnable(GL_DEPTH_TEST);
-	glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); //Keep the pixel
-
-	//================================
-	//	Jet Reflection
-	//================================
-	glPushMatrix();	
-		glScalef(1.0, -1.0, 1.0);
-		glTranslatef(camera_x, 14, camera_z - 500);
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
-		glScalef(10, 10, 10);
-		glCallList(jetMesh); //display7
+	  // box 1
+	  glPushMatrix();
+	  glTranslatef(0, shadowHeight, playArea);
+	  glScalef(1.0, 10, 1.0);
+	  glCallList(display2);
+	  glPopMatrix();
+	  // box 2
+	  glPushMatrix();
+	  glTranslatef(200, shadowHeight + boxMovement, playArea);
+	  glCallList(display3);
+	  glPopMatrix();
+	  // box 3
+	  glPushMatrix();
+	  glTranslatef(-200, shadowHeight + boxMovement, playArea);
+	  glCallList(display4);
+	  glPopMatrix();	  
+	 
+	  
 	glPopMatrix();
 
-	//============================================
-	//	Exhaust flames reflection
-	//============================================
-	if (areParticlesOn) {
-		//Particles with box 1
-		for (int i = 0; i < 50; i++) {
-			ps.add();
-		}
-		ps2.add();
-	}
-	float time = calculate_frame_time();
-	ps.update(time);
-	ps2.update(time);
-	ps2.remove();
-	ps.remove();
-	glPushMatrix();
-	glScalef(1.0, -1.0, 1.0);
-	glTranslatef(camera_x + 10, 5, camera_z - 400);
-	glRotatef(90, 1, 0, 0);
-	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
-	glScalef(.1, .1, .1);
-	drawParticles();//flames
-	glPopMatrix();
 
-	// STENCIL-STEP 4. disable it
-	glDisable(GL_STENCIL_TEST);
 
 	//========Regular 3d environment=====================================
 	glEnable(GL_BLEND);
@@ -447,27 +442,55 @@ void display(void) {
 	glColor4f(0.7, 0.0, 0.0, 0.9);
 	glColor4f(1.0, 1.0, 1.0, 0.9);
 
+
+	// skybox
+	glPushMatrix();
+	glTranslatef(-skyBoxMeshSize / 2, -skyBoxMeshSize / 2, -skyBoxMeshSize / 2);
+	glCallList(display5);
+	glPopMatrix();
+
 	//Water
 	glPushMatrix();
 	glTranslatef(-boundaryMeshSize / 2, -50, -boundaryMeshSize / 2);
 	glCallList(display6);
 	glPopMatrix();
 
-	//============================================
-	//	Exhaust flames
-	//============================================
-	ps.remove();
-	glPushMatrix();
-	glTranslatef(camera_x + 12, camera_y - 60, camera_z - 450);
-	glRotatef(90, 1, 0, 0);
-	glRotatef(jet_rotate, 0.0, 1.0, 0.0);
-	glScalef(.1, .1, .1);
-	drawParticles();//flames
-	glPopMatrix();
-	
+	////runway
+	//for (int x = 0; x < 10; x++) {
+	//	glPushMatrix();
+	//	glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
+	//	glCallList(runway);
+	//	glPopMatrix();
+	//}
+
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
 	glEnable(GL_LIGHT0);
+
+	//============================================
+	//	Exhaust flames
+	//============================================
+
+	if (areParticlesOn) {
+		//Particles with box 1
+		for (int i = 0; i < 50; i++) {
+			ps.add();
+		}
+	}
+
+	float time = calculate_frame_time();
+	ps.update(time);
+
+	glPushMatrix();
+		glTranslatef(10, 5, 200);
+		glRotatef(90, 1, 0, 0);
+		glScalef(.1, .1, .1);
+		drawParticles();//flames
+	glPopMatrix();
+
+	ps.remove();
+	
+
 
 	if (areBoundingBoxesOn) {
 		//bounding box
@@ -487,13 +510,13 @@ void display(void) {
 	//==========================
 	// jet
 	//==========================
-	glPushMatrix();
-		glTranslatef( camera_x, camera_y - 100, camera_z - 500 );
-		glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
-		glScalef(10, 10, 10);
-		glCallList(jetMesh); 
-	glPopMatrix();
+	//glPushMatrix();
+	//	glTranslatef( camera_x, camera_y - 100, camera_z - 500 );
+	//	glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
+	//	glTranslatef(lookx, looky, lookz);
+	//	glScalef(10, 10, 10);
+	//	glCallList(jetMesh); 
+	//glPopMatrix();
 
 	//plane
 	glPushMatrix();
@@ -529,19 +552,28 @@ void display(void) {
 	// texto
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-	glLoadIdentity();
-	gluOrtho2D(0, window_width, 0, window_height);
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glColor3f(0.0, 1.0, 0.0);
-	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
-	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
-	renderBitmapString( (window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: " );	
-	renderBitmapString( (window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str() );
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		gluOrtho2D(0, window_width, 0, window_height);
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+			glLoadIdentity();
+			glColor3f(0.0, 1.0, 0.0);
+			renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
+			renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
+			renderBitmapString( (window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: " );
+			renderBitmapString((window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str());
+			if (correctChoice) {
+				glColor3f(0.0, 0.0, 1.0);
+				renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Correct!!!!");
+			}
+			else {
+				glColor3f(1.0, 0.0, 0.0);
+				renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Wrong :(");
+			}
+			
+			glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	
 
@@ -571,25 +603,11 @@ void display(void) {
 	glColor3f(1.0, 1.0, 1.0);
 	renderBitmapString(0.0, window_height / 2, 0.0f, "Time Left: ");
 	
+	glDisable(GL_CULL_FACE);
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
 	glutSwapBuffers();
 }
-
-//// rotate what the user see
-//void rotate_point(float angle) {
-//	float s = sin(angle);
-//	float c = cos(angle);
-//	// translate point back to origin:
-//	camera_viewing_x -= camera_x;
-//	camera_viewing_z -= camera_z;
-//	// rotate point
-//	float xnew = camera_viewing_x * c - camera_viewing_z * s;
-//	float znew = camera_viewing_x * s + camera_viewing_z * c;
-//	// translate point back:
-//	camera_viewing_x = xnew + camera_x;
-//	camera_viewing_z = znew + camera_z;
-//}
 
 // callback function for keyboard (alfanumeric keys)
 void callbackKeyboard(unsigned char key, int x, int y) {
@@ -602,9 +620,40 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 			looky -= .1;
 			break;
 		case 'a': case 'A':
+			camera_y -= 50;
 			break;
 		case 'd': case 'D':
+			camera_y += 50;
 			break;
+		case 'l': case 'L':
+			if (leftBox) {
+				correctChoice = true;
+				raiseAndLower = true;
+				generateRandomNumber();
+
+				break;
+			}
+			else {
+				correctChoice = false;
+				raiseAndLower = true;
+				generateRandomNumber();
+
+				break;
+			}
+		case 'r': case 'R':
+			if (!leftBox) {
+				correctChoice = true;
+				raiseAndLower = true;
+				generateRandomNumber();
+
+				break;
+			}
+			else {
+				correctChoice = false;
+				raiseAndLower = true;
+				generateRandomNumber();
+				break;
+			}
 	}
 
 	if (jetPositionX > meshSize) {
