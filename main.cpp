@@ -1,6 +1,6 @@
 /**
  * SER 431
- * https://speakerdeck.com/javiergs/ser431-lecture-04
+ * Main
  **/
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 #include "nurbs_flag.h"
 
 
-// global
+ // global
 Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9, *mesh11;
 GLuint display1, display2, display3, display4, display5, display6, display7, displayBrick;
 GLuint textures[5];
@@ -27,14 +27,13 @@ vector<Points> box_spawn;
 
 const int boundaryMeshSize = 50000;
 const int skyBoxMeshSize = 80000;
-
 bool doOnce = true;
-float randY = 0;
-float randX = 0;
-float randZ = 0;
 
+
+int totalScore = 00;
 int countDown = 10000;
 bool raiseAndLower = false;
+bool getInBox = true;
 
 
 //Moving Flat
@@ -131,13 +130,13 @@ void init() {
 	mesh3 = createCube();
 	mesh4 = createCube();
 	mesh5 = createSkyBox(skyBoxMeshSize);
-	mesh6 = createPlane(boundaryMeshSize, boundaryMeshSize, boundaryMeshSize/10);
+	mesh6 = createPlane(boundaryMeshSize, boundaryMeshSize, boundaryMeshSize / 10);
 	mesh7 = createCube();
 	mesh8 = loadFile("OBJfiles/f-16.obj");
 	mesh9 = createPlane(2000, 2000, 2000);
 	mesh11 = createPlane(2000, 2000, 200);
 
-	
+
 	// normals
 	calculateNormalPerFace(mesh1);
 	calculateNormalPerFace(mesh2);
@@ -161,7 +160,7 @@ void init() {
 	calculateNormalPerVertex(mesh11);
 
 	calculateBoundingPoints(mesh8);
-	
+
 	// textures
 	loadBMP_custom(textures, "_BMP_files/grass.bmp", 0);
 	loadBMP_custom(textures, "_BMP_files/oldbox.bmp", 1);
@@ -172,7 +171,7 @@ void init() {
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
 	loadBMP_custom(textures, "_BMP_files/runway.bmp", 7);
 	loadBMP_custom(textures, "_BMP_files/brick.bmp", 8);
-	
+
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
 	display2 = meshToDisplayList(mesh2, 2, textures[1]);
@@ -186,26 +185,26 @@ void init() {
 	displayBrick = meshToDisplayList(mesh11, 11, textures[8]);
 
 	boundingBox = boundingBoxToDisplayList(mesh8, 9);
-	
+
 	// light
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
-	GLfloat light_ambient[]  = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_diffuse[]  = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_ambient[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat light_position[] = { 0.0, 0.0, 1.0, 0.0 };
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	
+
 	//===================================
 	// Fog
 	//===================================
 	if (isFogOn) {
 		glEnable(GL_FOG);
 	}
-	
+
 	glFogi(GL_FOG_MODE, GL_LINEAR);
 	GLfloat fogColor[4] = { 0.5, 0.5, 0.9, 1.0 };
 	glFogfv(GL_FOG_COLOR, fogColor);
@@ -269,7 +268,7 @@ void display(void) {
 	// light source position
 	light_position[0] = 500 * cos(lightAngle) + 1000;
 	light_position[1] = lightHeight;
-	light_position[2] = 500 * sin(lightAngle) -1000;
+	light_position[2] = 500 * sin(lightAngle) - 1000;
 	light_position[3] = 0.0; // directional light
 	lightAngle += 0.0005;
 
@@ -296,34 +295,46 @@ void display(void) {
 
 	// camera
 	glPushMatrix();
-		glScalef(scale, scale, scale);
-		glTranslatef(0.0f, 0.0f, 0.0f);
+	glScalef(scale, scale, scale);
+	glTranslatef(0.0f, 0.0f, 0.0f);
 	glPopMatrix();
 
+	// Raises and lowers the boxes to reveal the flames
 	if (raiseAndLower) {
-		if ( lowerBox == false && boxMovement < 200 ) {
+		if (lowerBox == false && boxMovement < 200) {
 			boxMovement += 1;
-				if (boxMovement > 199) {
-					lowerBox = true;
-				}
+			if (boxMovement > 199) {
+				lowerBox = true;
+			}
 		}
 		else {
 			boxMovement -= 1;
-				if (boxMovement == 0) {
-					raiseAndLower = false;
-					lowerBox = false;
-				}
+			if (boxMovement == 0) {
+				raiseAndLower = false;
+				lowerBox = false;
+				doOnce = true;
+				generateRandomNumber();
+			}
 		}
-		
+
 	}
-	
+
 
 	//====================
 	//	Draw Objects
 	//====================
 
+
+
 	//flag
 	glPushMatrix();
+	GLfloat mat_diffuse[] = { 1.0f, 0.5f, 0.31f, 1. };
+	GLfloat mat_specular[] = { 0.5f, 0.5f, 0.5f, 1. };
+	GLfloat mat_ambient[] = { 1.0f, 0.5f, 0.31f, 1. };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
 	glTranslatef(400, shadowHeight + 700, playArea);
 	glScalef(100, 100, 100);
 	draw_nurb();
@@ -331,6 +342,10 @@ void display(void) {
 
 	//flag reflection
 	glPushMatrix();
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
 	glTranslatef(400, shadowHeight - 700, playArea);
 	glScalef(100, -100, 100);
 	draw_nurb2();
@@ -338,19 +353,19 @@ void display(void) {
 
 	// boxes reflections
 	glPushMatrix();
-		glTranslatef(0, shadowHeight, playArea);
-		glScalef(1.0, -10.0, 1.0);
-		glCallList(display2);
+	glTranslatef(0, shadowHeight, playArea);
+	glScalef(1.0, -10.0, 1.0);
+	glCallList(display2);
 	glPopMatrix();
 	glPushMatrix();
-		glTranslatef(200, shadowHeight, playArea);
-		glScalef(1.0, -1.0, 1.0);
-		glCallList(display3);
+	glTranslatef(200, shadowHeight, playArea);
+	glScalef(1.0, -1.0, 1.0);
+	glCallList(display3);
 	glPopMatrix();
 	glPushMatrix();
-		glTranslatef(-200, shadowHeight, playArea);
-		glScalef(1.0, -1.0, 1.0);
-		glCallList(display4);
+	glTranslatef(-200, shadowHeight, playArea);
+	glScalef(1.0, -1.0, 1.0);
+	glCallList(display4);
 	glPopMatrix();
 
 	// areShadowsOn
@@ -358,78 +373,78 @@ void display(void) {
 
 
 	glPushMatrix();
-	  // Tell GL new light source position
-	  glLightfv(GL_LIGHT0, GL_POSITION, light_position);	
-	  // Shadows
-	  if (areShadowsOn) {
+	// Tell GL new light source position
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	// Shadows
+	if (areShadowsOn) {
 		glEnable(GL_STENCIL_TEST);
 		glStencilFunc(GL_ALWAYS, 1, 0xFFFFFFFF);
 		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	  }
-	  // Draw floor using blending to blend in reflection
-	  glEnable(GL_BLEND);
-	  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      glColor4f(1.0, 1.0, 1.0, 0.3);
-	  glPushMatrix();
-			glDisable(GL_LIGHTING);
-			glTranslatef(-900, shadowHeight, -900 + playArea);
-			glCallList(displayBrick);
-			glEnable(GL_LIGHTING);
-	  glPopMatrix();
-	  glDisable(GL_BLEND);
-	  // Shadows
+	}
+	// Draw floor using blending to blend in reflection
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor4f(1.0, 1.0, 1.0, 0.3);
+	glPushMatrix();
+	glDisable(GL_LIGHTING);
+	glTranslatef(-900, shadowHeight, -900 + playArea);
+	glCallList(displayBrick);
+	glEnable(GL_LIGHTING);
+	glPopMatrix();
+	glDisable(GL_BLEND);
+	// Shadows
 
-	  if (areShadowsOn) {
+	if (areShadowsOn) {
 		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
 		glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
 		//glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); 
 		//  To eliminate depth buffer artifacts, use glEnable(GL_POLYGON_OFFSET_FILL);
 		// Render 50% black shadow color on top of whatever the floor appareance is
 		glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glDisable(GL_LIGHTING);  /* Force the 50% black. */
-			glColor4f(0.0, 0.0, 0.0, 0.5);
-			glPushMatrix();
-				// Project the shadow
-				glMultMatrixf((GLfloat *)shadow_matrix);
-				// boxes
-				glDisable(GL_DEPTH_TEST);
-				glScalef(0, 10, 0);
-				glCallList(display2);
-				glTranslatef(200, shadowHeight, playArea);
-				glCallList(display3);
-				glTranslatef(-400, shadowHeight, playArea);
-				glCallList(display4);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glDisable(GL_LIGHTING);  /* Force the 50% black. */
+		glColor4f(0.0, 0.0, 0.0, 0.5);
+		glPushMatrix();
+		// Project the shadow
+		glMultMatrixf((GLfloat *)shadow_matrix);
+		// boxes
+		glDisable(GL_DEPTH_TEST);
+		glScalef(0, 10, 0);
+		glCallList(display2);
+		glTranslatef(200, shadowHeight, playArea);
+		glCallList(display3);
+		glTranslatef(-400, shadowHeight, playArea);
+		glCallList(display4);
 
-				glTranslatef(100, shadowHeight + 100, playArea + 100);
-				glScalef(100, 100, 100);
-				draw_nurb3();
-				glEnable(GL_DEPTH_TEST);
-			glPopMatrix();
+		glTranslatef(100, shadowHeight + 100, playArea + 100);
+		glScalef(100, 100, 100);
+		draw_nurb3();
+		glEnable(GL_DEPTH_TEST);
+		glPopMatrix();
 		glDisable(GL_BLEND);
 		glEnable(GL_LIGHTING);
 		// To eliminate depth buffer artifacts, use glDisable(GL_POLYGON_OFFSET_FILL);
 		glDisable(GL_STENCIL_TEST);
-	  }
+	}
 
-	  // box 1
-	  glPushMatrix();
-	  glTranslatef(0, shadowHeight, playArea);
-	  glScalef(1.0, 10, 1.0);
-	  glCallList(display2);
-	  glPopMatrix();
-	  // box 2
-	  glPushMatrix();
-	  glTranslatef(200, shadowHeight + boxMovement, playArea);
-	  glCallList(display3);
-	  glPopMatrix();
-	  // box 3
-	  glPushMatrix();
-	  glTranslatef(-200, shadowHeight + boxMovement, playArea);
-	  glCallList(display4);
-	  glPopMatrix();	  
-	 
-	  
+	// box 1
+	glPushMatrix();
+	glTranslatef(0, shadowHeight, playArea);
+	glScalef(1.0, 10, 1.0);
+	glCallList(display2);
+	glPopMatrix();
+	// box 2
+	glPushMatrix();
+	glTranslatef(200, shadowHeight + boxMovement, playArea);
+	glCallList(display3);
+	glPopMatrix();
+	// box 3
+	glPushMatrix();
+	glTranslatef(-200, shadowHeight + boxMovement, playArea);
+	glCallList(display4);
+	glPopMatrix();
+
+
 	glPopMatrix();
 
 
@@ -481,15 +496,27 @@ void display(void) {
 	float time = calculate_frame_time();
 	ps.update(time);
 
-	glPushMatrix();
-		glTranslatef(10, 5, 200);
-		glRotatef(90, 1, 0, 0);
+	if (leftBox) {
+		glPushMatrix();
+		glTranslatef(-150, shadowHeight, playArea + 50);
 		glScalef(.1, .1, .1);
 		drawParticles();//flames
-	glPopMatrix();
+		glPopMatrix();
 
-	ps.remove();
-	
+		ps.remove();
+	}
+	else {
+		glPushMatrix();
+		glTranslatef(250, shadowHeight, playArea + 50);
+		glScalef(.1, .1, .1);
+		drawParticles();//flames
+		glPopMatrix();
+
+		ps.remove();
+	}
+
+
+
 
 
 	if (areBoundingBoxesOn) {
@@ -520,8 +547,8 @@ void display(void) {
 
 	//plane
 	glPushMatrix();
-		glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
-		glCallList(display1);
+	glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
+	glCallList(display1);
 	glPopMatrix();
 
 	//runway
@@ -531,7 +558,7 @@ void display(void) {
 		glCallList(runway);
 		glPopMatrix();
 	}
-	
+
 	if (isLightArrowOn) {
 		drawLightArrow();
 	}
@@ -552,30 +579,38 @@ void display(void) {
 	// texto
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
-		glLoadIdentity();
-		gluOrtho2D(0, window_width, 0, window_height);
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-			glLoadIdentity();
-			glColor3f(0.0, 1.0, 0.0);
-			renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
-			renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
-			renderBitmapString( (window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: " );
-			renderBitmapString((window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str());
-			if (correctChoice) {
-				glColor3f(0.0, 0.0, 1.0);
-				renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Correct!!!!");
-			}
-			else {
-				glColor3f(1.0, 0.0, 0.0);
-				renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Wrong :(");
-			}
-			
-			glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluOrtho2D(0, window_width, 0, window_height);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	glColor3f(0.0, 1.0, 0.0);
+	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
+	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
+	renderBitmapString((window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: ");
+	renderBitmapString((window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str());
+	if (getInBox) {
+		renderBitmapString((window_width / 2) - 150, ((window_height / 10) * 9) + 20, 0.0f, "Go to the area with the Flag to make a choice!");
+	}
+	else if (correctChoice) {
+		glColor3f(0.0, 0.0, 1.0);
+		renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Correct!!!!");
+	}
+	else {
+		glColor3f(1.0, 0.0, 0.0);
+		renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Wrong :(");
+	}
+
+	string scoreString = to_string(totalScore);
+	glColor3f(1.0, 1.0, 1.0);
+	renderBitmapString(10.0, window_height / 8, 0.0f, "Score: ");
+	renderBitmapString(70, window_height / 8, 0.0f, scoreString.c_str());
+
+	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
-	
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
 
 	//=====================================
 	// Second Viewport
@@ -589,20 +624,19 @@ void display(void) {
 	glPushMatrix();
 	glLoadIdentity();
 	gluOrtho2D(0.0, 1200.0, 0.0, 250.0);
-	
+
 	glColor3f(.200, .200, .200);
 	//Bottom tunnel
 	glShadeModel(GL_FLAT);
 	glBegin(GL_QUADS);
-		glVertex2f( 0, 0 );//bottom left
-		glVertex2f( window_width, 0 );//bottom right
-		glVertex2f( window_width, window_height ); //top right
-		glVertex2f( 0, window_height );//top left
+	glVertex2f(0, 0);//bottom left
+	glVertex2f(window_width, 0);//bottom right
+	glVertex2f(window_width, window_height); //top right
+	glVertex2f(0, window_height);//top left
 	glEnd();
 
-	glColor3f(1.0, 1.0, 1.0);
-	renderBitmapString(0.0, window_height / 2, 0.0f, "Time Left: ");
-	
+
+
 	glDisable(GL_CULL_FACE);
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
@@ -613,47 +647,64 @@ void display(void) {
 void callbackKeyboard(unsigned char key, int x, int y) {
 
 	switch (key) {
-		case 'w': case 'W':
-			looky += .1;
-			break;
-		case 's': case 'S':
-			looky -= .1;
-			break;
-		case 'a': case 'A':
-			camera_y -= 50;
-			break;
-		case 'd': case 'D':
-			camera_y += 50;
-			break;
-		case 'l': case 'L':
+	case 'w': case 'W':
+		looky += .1;
+		break;
+	case 's': case 'S':
+		looky -= .1;
+		break;
+	case 'a': case 'A':
+		camera_y -= 50;
+		break;
+	case 'd': case 'D':
+		camera_y += 50;
+		break;
+	case 'l': case 'L':
+		if (camera_x > -895 && camera_x < 655
+			&& camera_z > -16890 && camera_z < -14800 && doOnce == true) {
 			if (leftBox) {
 				correctChoice = true;
+				totalScore++;
+				doOnce = false;
 				raiseAndLower = true;
-				generateRandomNumber();
-
+				getInBox = false;
 				break;
 			}
 			else {
 				correctChoice = false;
 				raiseAndLower = true;
-				generateRandomNumber();
-
+				getInBox = false;
 				break;
 			}
-		case 'r': case 'R':
+		}
+		else {
+			getInBox = true;
+		}
+		break;
+	case 'r': case 'R':
+		if (camera_x > -895 && camera_x < 655
+			&& camera_z > -16890 && camera_z < -14800 && doOnce == true) {
 			if (!leftBox) {
 				correctChoice = true;
+				totalScore++;
+				doOnce = false;
 				raiseAndLower = true;
-				generateRandomNumber();
-
+				getInBox = false;
 				break;
 			}
+
 			else {
 				correctChoice = false;
 				raiseAndLower = true;
-				generateRandomNumber();
+				getInBox = false;
 				break;
 			}
+		}
+		else {
+			getInBox = true;
+		}
+		break;
+
 	}
 
 	if (jetPositionX > meshSize) {
@@ -674,12 +725,12 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 
 // callback function for arrows
 void moveMeFlat(int i) {
-	camera_x = camera_x + i * (lookx)*1.0;	
+	camera_x = camera_x + i * (lookx)*1.0;
 	camera_z = camera_z + i * (lookz)*1.0;
 }
 
 void orientMe(float ang) {
-	lookx = sin(ang); 
+	lookx = sin(ang);
 	lookz = -cos(ang);
 }
 
@@ -719,7 +770,7 @@ int main(int argc, char* argv[]) {
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 	glutIdleFunc(display);
-	
+
 	glutSpecialFunc(specialkeys);
 	glutKeyboardFunc(callbackKeyboard);
 	init();
