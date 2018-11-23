@@ -78,4 +78,3 @@ public:
 };
 
 ParticleSystem ps;
-ParticleSystem ps2;

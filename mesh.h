@@ -28,9 +28,15 @@ struct Mesh {
 	vector<int> face_index_normalPerVertex;
 	vector<int> face_index_texture;
 	
-	Vec3f maxBoundingPoint;
-	Vec3f minBoundingPoint;
-	
+	float maxBoundingPoint[3];
+	float minBoundingPoint[3];
+
+};
+
+struct Points {
+	float x;
+	float y;
+	float z;
 };
 
 float **heightMap;
@@ -511,3 +517,25 @@ void calculateNormalPerVertex(Mesh* m) {
 		m->face_index_normalPerVertex.push_back(m->face_index_vertex[pos]);
 	}
 }
+
+void calculateBoundingPoints(Mesh* m) {
+	float maxBP[3] = { -99999999.0, -99999999.0, -9999999.0 };
+	float minBP[3] = { 99999999.0, 99999999.0, 9999999.0 };
+	for (unsigned int i = 0; i < m->face_index_vertex.size(); i++) {
+		//Calculate bounding points
+		for (unsigned int x = 0; x < 3; x++) {
+			if (m->dot_vertex[m->face_index_vertex[i]][x] < minBP[x]) {
+				minBP[x] = m->dot_vertex[m->face_index_vertex[i]][x];
+			}
+			if (m->dot_vertex[m->face_index_vertex[i]][x] > maxBP[x]) {
+				maxBP[x] = m->dot_vertex[m->face_index_vertex[i]][x];
+			}
+		}
+	}
+	for (unsigned int x = 0; x < 3; x++) {
+		m->maxBoundingPoint[x] = maxBP[x];
+		m->minBoundingPoint[x] = minBP[x];
+	}
+	
+}
+
