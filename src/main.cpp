@@ -204,7 +204,7 @@ void display(void) {
 	//  Camera
 	//===========================================================================
 	gluLookAt(jet.position[0], jet.position[1], jet.position[2],
-		jet.position[0] + jet.direction[1], jet.position[1] + jet.direction[0], jet.position[2],
+		jet.position[0] + jet.direction[1], jet.position[1] + jet.direction[0], jet.position[2] -  jet.direction[2],
 		0.0f, 1.0f, 0.0f);
 
 	//=======================================
@@ -305,6 +305,7 @@ void display(void) {
 
 		glTranslatef(camera_x, 20, camera_z - 500);
 		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
+		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
 		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(jetMesh);
@@ -342,6 +343,7 @@ void display(void) {
 		glScalef(1.0, -1.0, 1.0);
 		glTranslatef(camera_x, 14, camera_z - 500);
 		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
+		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
 		glTranslatef(lookx, looky, lookz);
 		glScalef(10, 10, 10);
 		glCallList(jetMesh); //display7
@@ -396,8 +398,8 @@ void display(void) {
 	// jet
 	glPushMatrix();
 		glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
+		glRotatef(-90 + jet.rotation[0], 1.0, 0.0, 0.0);
 		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
-		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
 		glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
 		
 		glScalef(10, 10, 10);

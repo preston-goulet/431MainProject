@@ -20,7 +20,10 @@ public:
 		direction[2] = 0.0f;
 	}
 
-	GameObject(float posX, float posY, float posZ, float velX, float velY, float velZ, float accX, float accY, float accZ) {
+	GameObject(float posX, float posY, float posZ, 
+		float velX, float velY, float velZ, 
+		float accX, float accY, float accZ,
+		float rotX, float rotY, float rotZ) {
 		position[0] = posX;
 		position[1] = posY;
 		position[2] = posZ;
@@ -30,6 +33,9 @@ public:
 		acceleration[0] = accX;
 		acceleration[1] = accY;
 		acceleration[2] = accZ;
+		rotation[0] = rotX;
+		rotation[1] = rotY;
+		rotation[2] = rotZ;
 	}
 
 	void update(float dt) {
@@ -69,7 +75,8 @@ public:
 GameObject jet = GameObject(
 	0.0f, 300.0f, 0.0f,
 	0.0f, 0.0f, -100.0f,
-	0.0f, 0.0f, 10.0f
+	0.0f, 0.0f, 10.0f,
+	90.0f, 180.0f, 0.0f
 );
 
 void updateGameObjects(float deltaTime) {	
