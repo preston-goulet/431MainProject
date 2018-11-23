@@ -2,6 +2,8 @@
  * SER 431
  * https://speakerdeck.com/javiergs/ser431-lecture-04
  By Preston Goulet(pegoulet) & Taylor Greeff(tgreeff)
+
+ TODO: fix camera; allow use of mouse to move
  **/
 
 #include <stdlib.h>
@@ -43,9 +45,6 @@ float px, py;//for arrow
 int moveSpeed = 50;
 float angle = 0;
 float playerLook = 0;
-
-
-
 
 // init
 void init() {
@@ -183,8 +182,9 @@ void display(void) {
 	light_position[3] = 0.0; // directional light
 	lightAngle += 0.0005;
 	
-	updateParticles();
-	updateGameObjects();
+	float time = calculate_frame_time();
+	updateParticles(time);
+	updateGameObjects(time);
 
 	// Calculate Shadow matrix
 	shadowMatrix(shadow_matrix, floor_normal, light_position);
@@ -203,16 +203,9 @@ void display(void) {
 	//===========================================================================
 	//  Camera
 	//===========================================================================
-	gluLookAt(camera_x, camera_y, camera_z,
-		camera_x + lookx, camera_y + looky, camera_z + lookz,
+	gluLookAt(jet.position[0], jet.position[1], jet.position[2],
+		jet.position[0] + jet.direction[1], jet.position[1] + jet.direction[0], jet.position[2],
 		0.0f, 1.0f, 0.0f);
-
-	// camera
-	glPushMatrix();
-		glScalef(scale, scale, scale);
-		glTranslatef(0.0f, 0.0f, 0.0f);
-	glPopMatrix();
-
 
 	//=======================================
 	// Box Targets
@@ -364,7 +357,7 @@ void display(void) {
 	glRotatef(90, 1, 0, 0);
 	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
 	glScalef(.1, .1, .1);
-	drawParticles();//flames
+	ps.drawParticles();//flames
 	glPopMatrix();
 
 	// STENCIL-STEP 4. disable it
@@ -393,40 +386,33 @@ void display(void) {
 	glRotatef(90, 1, 0, 0);
 	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
 	glScalef(.1, .1, .1);
-	drawParticles();//flames
+	ps.drawParticles();//flames
 	glPopMatrix();
 	
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
 	glEnable(GL_LIGHT0);
 
-	if (areBoundingBoxesOn) {
-		//bounding box
-		glPushMatrix();
-		glDisable(GL_LIGHTING);
-		glColor3f(1.0, 1.0, 0.0);
-		glTranslatef(camera_x, camera_y - 100, camera_z - 500);
-		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
-		glScalef(10, 10, 10);
-		glCallList(boundingBox);
-
-		glEnable(GL_LIGHTING);
-		glPopMatrix();
-	}
-
-	//==========================
 	// jet
-	//==========================
 	glPushMatrix();
-		glTranslatef( camera_x, camera_y - 100, camera_z - 500 );
+		glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
 		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
+		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
+		glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
+		
 		glScalef(10, 10, 10);
-		glCallList(jetMesh); 
+		glCallList(jetMesh);
+
+		if (areBoundingBoxesOn) {
+			glDisable(GL_LIGHTING);
+			glColor3f(1.0, 1.0, 0.0);
+			glCallList(boundingBox);
+			glEnable(GL_LIGHTING);
+		}
+		
 	glPopMatrix();
 
-	//plane
+	//land plane
 	glPushMatrix();
 		glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
 		glCallList(display1);
@@ -520,16 +506,23 @@ void display(void) {
 void callbackKeyboard(unsigned char key, int x, int y) {
 
 	switch (key) {
-		case 'w': case 'W':
-			looky += .1;
+	case 'w': case 'W':
+			jet.rotation[0] += .1;
 			break;
 		case 's': case 'S':
-			looky -= .1;
+			jet.rotation[0] -= .1;
 			break;
 		case 'a': case 'A':
+			jet.rotation[1] += .1;
 			break;
-		case 'd': case 'D':
+		case 'd': case 'D':			
+			jet.rotation[1] -= .1;
 			break;
+		case 'q': case 'Q':			
+			jet.rotation[2] -= .1;
+			break;
+		case 'e': case 'E':
+			jet.rotation[2] += .1;
 	}
 
 	if (jet.position[0] > meshSize) {
@@ -548,62 +541,26 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 	}
 }
 
-void updateParticles() {
-	if (areParticlesOn) {
-		//Particles with box 1
-		for (int i = 0; i < 50; i++) {
-			ps.add();
-		}
-		ps2.add();
-	}
-	float time = calculate_frame_time();
-	
-	ps.update(time);
-	ps2.update(time);
-	ps2.remove();
-	ps.remove();
-}
-
-void updateGameObjects() {
-	float time = calculate_frame_time();
-	jet.update(time);
-}
-
-// callback function for arrows
-void moveMeFlat(int i) {
-	camera_x = camera_x + i * (lookx)*1.0;	
-	camera_z = camera_z + i * (lookz)*1.0;
-}
-
-void orientMe(float ang) {
-	lookx = sin(ang); 
-	lookz = -cos(ang);
-}
-
 void specialkeys(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
-		moveMeFlat(moveSpeed);
+		jet.rotation[0] += 5;
+
 		break;
 	case GLUT_KEY_DOWN:
-		moveMeFlat(-moveSpeed);
+		jet.rotation[0] -= 5;
 		break;
 	case GLUT_KEY_LEFT:
-		angle -= 0.1f;
-		orientMe(angle);
-		playerLook += 5;
+		
 		jet.rotation[1] += 5;
 		break;
 	case GLUT_KEY_RIGHT:
-		angle += 0.1f;
-		orientMe(angle);
-		playerLook -= 5;
+		
 		jet.rotation[1] -= 5;
 		break;
 	}
 
 	glutPostRedisplay();
-
 }
 
 // main

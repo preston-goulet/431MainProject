@@ -5,7 +5,9 @@ class CurveFollower {
 public:
 	Curve* curve;
 	int index = 0;
-
+	CurveFollower() {
+		curve = new Curve();
+	}
 	CurveFollower(Curve* c) {
 		curve = c;
 		curve->points = curve->calculatePoints();
@@ -61,3 +63,5 @@ Vec3f CurveFollower::setIndex(int curveIndex) {
 	return getCurrentPoint();
 }
 
+CurveFollower jetFollower = CurveFollower(&jetCurve);
+CurveFollower bulletFolloew = CurveFollower(&bulletCurve);

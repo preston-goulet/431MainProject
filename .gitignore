@@ -5,6 +5,11 @@
 *.slo
 *.lo
 *.o
+*.DS_Store
+*._screenshot.png
+*._README.md
+*.vcxproj.filters
+*.sln
 
 # Precompiled Headers
 *.gch

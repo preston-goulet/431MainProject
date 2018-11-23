@@ -34,11 +34,6 @@ float camera_viewing_z = 0.0;
 
 float total_moving_angle = 0.0;
 
-//Moving box values
-GameObject jet = GameObject(
-	0.0f, 100.0f, 0.0f,
-	0.0f, 0.0f, 1.0f);
-
 const int perlinMeshSize = 80000;
 
 float meshSize = (perlinMeshSize - 1) / 2;
@@ -51,10 +46,10 @@ float runway_z = -1000;
 
 void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 	for (Vec3f i : mesh->dot_vertex) {
-		float x = jet.getPosX();
-		float z = jet.getPosZ();
+		float x = jet.position[0];
+		float z = jet.position[2];
 		if (abs(x - (i.x - xOffset)) < 200 && abs(z - (i.z - zOffset)) < 200) {
-			jet.setPosY(10 + i.y);
+			jet.position[1] = 10 + i.y;
 		}
 	}
 }
