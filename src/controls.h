@@ -44,6 +44,9 @@ float runway_x = -10;
 float runway_y = 50;
 float runway_z = -1000;
 
+float moveBlock = 0.0;
+float moveBlock_side = 0.0;
+
 void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 	for (Vec3f i : mesh->dot_vertex) {
 		float x = jet.position[0];
@@ -54,5 +57,63 @@ void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 	}
 }
 
-float moveBlock = 0.0;
-float moveBlock_side = 0.0;
+// callback function for keyboard (alfanumeric keys)
+void callbackKeyboard(unsigned char key, int x, int y) {
+
+	switch (key) {
+	case 'w': case 'W':
+		jet.rotation[0] += .1;
+		break;
+	case 's': case 'S':
+		jet.rotation[0] -= .1;
+		break;
+	case 'a': case 'A':
+		jet.rotation[1] += .1;
+		break;
+	case 'd': case 'D':
+		jet.rotation[1] -= .1;
+		break;
+	case 'q': case 'Q':
+		jet.rotation[2] -= .1;
+		break;
+	case 'e': case 'E':
+		jet.rotation[2] += .1;
+	}
+
+	if (jet.position[0] > meshSize) {
+		jet.position[0] = meshSize;
+	}
+	else if (jet.position[0] < -meshSize) {
+		jet.position[0] = -meshSize;
+	}
+
+	// box Z verification
+	if (jet.position[2] > meshSize) {
+		jet.position[2] = meshSize;
+	}
+	else if (jet.position[2] < -meshSize) {
+		jet.position[2] = -meshSize;
+	}
+}
+
+void specialkeys(int key, int x, int y) {
+	switch (key) {
+	case GLUT_KEY_UP:
+		jet.rotation[0] += 5;
+
+		break;
+	case GLUT_KEY_DOWN:
+		jet.rotation[0] -= 5;
+		break;
+	case GLUT_KEY_LEFT:
+
+		jet.rotation[1] += 5;
+		break;
+	case GLUT_KEY_RIGHT:
+
+		jet.rotation[1] -= 5;
+		break;
+	}
+
+	glutPostRedisplay();
+}

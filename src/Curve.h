@@ -30,7 +30,7 @@ makeMeshFrom2Lines(&top, &bottom);
 
 class Curve {
 public:
-	int N = 128;
+	int numberPoints;
 	Vec3f* start;
 	Vec3f* stop;
 	Vec3f* tanStart;
@@ -41,24 +41,25 @@ public:
 		stop = new Vec3f(0.0f, 0.0f, 0.0f);
 		tanStart = new Vec3f(0.0f, 0.0f, 0.0f);
 		tanStop = new Vec3f(0.0f, 0.0f, 0.0f);
-		N = 128;
+		numberPoints = 128;
 	}
 	Curve(Vec3f* startVec3f, Vec3f* stopVec3f, Vec3f* tanStartVec3f, Vec3f* tanStopVec3f, int numPoints) {
 		start = startVec3f;
 		stop = stopVec3f;
 		tanStart = tanStartVec3f;
 		tanStop = tanStopVec3f;
-		N = numPoints;
+		numberPoints = numPoints;
 	}
+
 	vector<Vec3f> calculatePoints();
+	void drawLines();
+	void drawPoints();
 };
 
 vector<Vec3f> Curve::calculatePoints() {
-	vector<Vec3f> points;
-
 	// use the parametric time value 0 to 1
-	for (int i = 0; i != N; ++i) {
-		float t = (float)i / (N - 1);
+	for (int i = 0; i != numberPoints; ++i) {
+		float t = (float)i / (numberPoints - 1);
 		// calculate blending functions
 		float b0 = 2 * t*t*t - 3 * t*t + 1;
 		float b1 = -2 * t*t*t + 3 * t*t;
@@ -73,6 +74,27 @@ vector<Vec3f> Curve::calculatePoints() {
 	}
 
 	return points;
+}
+
+void Curve::drawLines() {
+	glBegin(GL_LINE_STRIP);
+	// use the parametric time value 0 to 1
+	for (int i = 0; i != numberPoints; ++i) {
+		// specify the point
+		glVertex3f(points.at(i).x, points.at(i).y, points.at(i).z);
+	}
+	glEnd();
+
+}
+
+void Curve::drawPoints() {
+	glBegin(GL_POINTS);
+	// use the parametric time value 0 to 1
+	for (int i = 0; i != numberPoints; ++i) {
+		// specify the point
+		glVertex3f(points.at(i).x, points.at(i).y, points.at(i).z);
+	}
+	glEnd();
 }
 
 Curve jetCurve = Curve(&Vec3f(-10, -10, 0),

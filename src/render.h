@@ -5,17 +5,9 @@
 
 #pragma once
 #include <GL/glut.h>
-#include "mesh.h"
 
 #define GL_CLAMP_TO_EDGE 0x812F
 #define GL_TEXTURE_WRAP_R 0x8072
-
-bool isReflectionOn = true;
-bool isFogOn = true;
-bool areBoundingBoxesOn = true;
-bool areParticlesOn = true;
-bool areShadowsOn = true;
-bool isLightArrowOn = true;
 
 GLfloat light_position[4];
 GLfloat shadow_matrix[4][4];
@@ -182,124 +174,14 @@ GLuint boundingBoxToDisplayList(Mesh* m, int id) {
 	return listID;
 }
 
-void toggleReflection() {
-	if (isReflectionOn) {
-		isReflectionOn = false;
-	}
-	else {
-		isReflectionOn = true;
-	}
+void updateLights() {
+	// light source position
+	light_position[0] = 500 * cos(lightAngle) + 1000;
+	light_position[1] = lightHeight;
+	light_position[2] = 500 * sin(lightAngle) - 1000;
+	light_position[3] = 0.0; // directional light
+	lightAngle += 0.0005;
+	// Calculate Shadow matrix
+	shadowMatrix(shadow_matrix, floor_normal, light_position);
 }
 
-void toggleBoundingBoxes() {
-	if (areBoundingBoxesOn) {
-		areBoundingBoxesOn = false;
-	}
-	else {
-		areBoundingBoxesOn = true;
-	}
-}
-
-void toggleFog() {
-	if (isFogOn) {
-		isFogOn = false;
-		glDisable(GL_FOG);
-	}
-	else {
-		isFogOn = true;
-		glEnable(GL_FOG);
-	}
-}
-
-void toggleParticles() {
-	if (areParticlesOn) {
-		areParticlesOn = false;
-	}
-	else {
-		areParticlesOn = true;
-	}
-}
-
-void toggleShadows() {
-	if (areShadowsOn) {
-		areShadowsOn = false;
-	}
-	else {
-		areShadowsOn = true;
-	}
-}
-
-void toggleLightArrow() {
-	if (isLightArrowOn) {
-		isLightArrowOn = false;
-	}
-	else {
-		isLightArrowOn = true;
-	}
-}
-
-void menuListener(int option) {
-	switch (option) {
-	case 0:
-		toggleReflection();
-		break;
-	case 1:
-		toggleBoundingBoxes();
-		break;
-	case 2:
-		toggleFog();
-		break;
-	case 3:
-		toggleParticles();
-		break;
-	case 4:
-		toggleShadows();
-		break;
-	case 5:
-		toggleLightArrow();
-		break;
-	}
-	glutPostRedisplay();
-}
-
-void addMenu() {
-	int optionsMenu = glutCreateMenu(menuListener);
-
-	//add entries to submenu Colores
-	glutAddMenuEntry("Toggle Reflection", 0);
-	glutAddMenuEntry("Toggle Bounding Boxes", 1);
-	glutAddMenuEntry("Toggle Fog", 2);
-	glutAddMenuEntry("Toggle Particles", 3);
-	glutAddMenuEntry("Toggle Shadow", 4);
-	glutAddMenuEntry("Toggle Light Arrow", 5);
-
-	// create main menu
-	int menu = glutCreateMenu(menuListener);
-	glutAddSubMenu("Options", optionsMenu);
-
-	// attach the menu to the right button
-	glutAttachMenu(GLUT_RIGHT_BUTTON);
-}
-
-void drawPoints(Vec3f* start, Vec3f* stop, Vec3f* tan1, Vec3f* tan2) {
-	unsigned int N = 128;
-
-	glBegin(GL_LINE_STRIP);
-	// use the parametric time value 0 to 1
-	for (int i = 0; i != N; ++i) {
-		float t = (float)i / (N - 1);
-		// calculate blending functions
-		float b0 = 2 * t*t*t - 3 * t*t + 1;
-		float b1 = -2 * t*t*t + 3 * t*t;
-		float b2 = t * t*t - 2 * t*t + t;
-		float b3 = t * t*t - t * t;
-		// calculate the x, y and z of the curve point
-		float x = b0 * start->x + b1 * stop->x + b2 * tan1->x + b3 * tan2->x;
-		float y = b0 * start->y + b1 * stop->y + b2 * tan1->y + b3 * tan2->y;
-		float z = b0 * start->z + b1 * stop->z + b2 * tan1->z + b3 * tan2->z;
-		// specify the point
-		glVertex3f(x, y, z);
-	}
-	glEnd();
-
-}
