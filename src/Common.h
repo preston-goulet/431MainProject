@@ -14,12 +14,13 @@
 #include "GameObject.h"
 #include "Curve.h"
 #include "CurveFollower.h"
+#include "nurbs_flag.h"
 
 
 // global
-Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9;
+Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9, *mesh11;
 Mesh *mesh[10];
-GLuint display1, display2, display3, display4, display5, display6, display7;
+GLuint display1, display2, display3, display4, display5, display6, display7, displayBrick;
 GLuint displayLists[10];
 
 GLuint textures[5];
@@ -28,6 +29,15 @@ GLuint boundingBox;
 
 const int boundaryMeshSize = 60000;
 const int skyBoxMeshSize = 80000;
+
+vector<Points> box_spawn;
+
+float randY = 0;
+float randX = 0;
+float randZ = 0;
+
+//Moving Flat
+float px, py;//for arrow
 
 // reshape
 void reshape(int w, int h) {
@@ -68,6 +78,7 @@ void init() {
 	mesh7 = createCube();
 	mesh8 = loadFile("OBJfiles/f-16.obj");
 	mesh9 = createPlane(2000, 2000, 2000);
+	mesh11 = createPlane(2000, 2000, 200);
 
 	// normals
 	calculateNormalPerFace(mesh1);
@@ -79,6 +90,7 @@ void init() {
 	calculateNormalPerFace(mesh7);
 	calculateNormalPerFace(mesh8);
 	calculateNormalPerFace(mesh9);
+	calculateNormalPerFace(mesh11);
 	calculateNormalPerVertex(mesh1);
 	calculateNormalPerVertex(mesh2);
 	calculateNormalPerVertex(mesh3);
@@ -88,6 +100,7 @@ void init() {
 	calculateNormalPerVertex(mesh7);
 	calculateNormalPerVertex(mesh8);
 	calculateNormalPerVertex(mesh9);
+	calculateNormalPerVertex(mesh11);
 
 	//Bounding point calc
 	calculateBoundingPoints(mesh8);
@@ -101,6 +114,7 @@ void init() {
 	codedTexture(textures, 5, 2); //Fire texture - noise fire. Type=2
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
 	loadBMP_custom(textures, "_BMP_files/runway.bmp", 7);
+	loadBMP_custom(textures, "_BMP_files/brick.bmp", 8);
 	
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
@@ -112,6 +126,7 @@ void init() {
 	display7 = meshToDisplayList(mesh7, 7, textures[6]);
 	jetMesh = meshToDisplayListObjects(mesh8, 8);
 	runway = meshToDisplayList(mesh9, 10, textures[7]);
+	displayBrick = meshToDisplayList(mesh11, 11, textures[8]);
 
 	boundingBox = boundingBoxToDisplayList(mesh8, 9);
 	
@@ -144,4 +159,18 @@ void init() {
 	dot_vertex_floor.push_back(Vec3<GLfloat>(2000.0, 0.0, -2000.0));
 	dot_vertex_floor.push_back(Vec3<GLfloat>(-2000.0, 0.0, -2000.0));
 	calculate_floor_normal(&floor_normal, dot_vertex_floor);
+	//=========================================
+	// Nurb Flab
+	//=========================================
+	//Original
+	nurbsflag = gluNewNurbsRenderer();
+	gluNurbsProperty(nurbsflag, GLU_SAMPLING_TOLERANCE, 100.0);
+
+	//Shadow
+	nurbsflag_three = gluNewNurbsRenderer();
+	gluNurbsProperty(nurbsflag_three, GLU_SAMPLING_TOLERANCE, 100.0);
+
+	gluNurbsProperty(nurbsflag_three, GLU_DISPLAY_MODE, GLU_FILL); //GLU_OUTLINE_POLYGON
+	generateRandomNumber();
 }
+

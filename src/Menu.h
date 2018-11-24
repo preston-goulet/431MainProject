@@ -52,22 +52,22 @@ void menuListener(int option) {
 		areTexturesWithImagesOn = !areTexturesWithImagesOn;
 		break;
 	case 10:
-		isProceduralTextureGenOn != isProceduralTextureGenOn;
+		isProceduralTextureGenOn = !isProceduralTextureGenOn;
 		break;
 	case 11:
-		areMaterialsOn != areMaterialsOn;
+		areMaterialsOn = !areMaterialsOn;
 		break;
 	case 12:
-		isGameModeOn != isGameModeOn;
+		isGameModeOn = !isGameModeOn;
 		break;
 	case 13:
-		areCollisionsOn != areCollisionsOn;
+		areCollisionsOn = !areCollisionsOn;
 		break;
 	case 14:
-		isMultiscaleTerrainOn != isMultiscaleTerrainOn;
+		isMultiscaleTerrainOn = !isMultiscaleTerrainOn;
 		break;
 	case 15:
-		areRecursiveFractalsOn != areRecursiveFractalsOn;
+		areRecursiveFractalsOn = !areRecursiveFractalsOn;
 		break;
 	}
 	glutPostRedisplay();

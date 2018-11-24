@@ -24,13 +24,24 @@ float y_angle = 0.0;
 float camera_x = 0.0;
 float camera_y = 500.0;
 float camera_z = 600.0;
-
 float camera_rotate = 0;
-
-
 float camera_viewing_x = 0.0;
 float camera_viewing_y = 300.0;
 float camera_viewing_z = 0.0;
+
+int totalScore = 00;
+int countDown = 10000;
+int moveSpeed = 500;
+float playerLook = 0;
+float angle = 0;
+
+bool raiseAndLower = false;
+bool getInBox = true;
+
+//Moving Flat
+//float camera_x = 0.0f, camera_y = 20.0f, camera_z = 5.0f;
+float lookx = 0.0f, looky = 0.0f, lookz = -1.0f;
+bool doOnce = true;
 
 float total_moving_angle = 0.0;
 
@@ -40,12 +51,32 @@ float meshSize = (perlinMeshSize - 1) / 2;
 int cameraSpeed = 1;
 int boxSpeed = 10;
 
-float runway_x = -10;
-float runway_y = 50;
+float runway_x = -950;
+float runway_y = 150;
 float runway_z = -1000;
+
+int shadowHeight = 200;
+int playArea = -16000;
+bool leftBox = false; // Random number will be even for left box or odd for right
+char usersChoice = 'l'; // user will choose l or r for left or right box
+bool correctChoice = false; // If the user guesses the correct box then true
+bool lowerBox = false; //Determines if box needs lowered after being raised
+int boxMovement = 0; //Added to the y value of the boxes when they need to be raised and lowered
 
 float moveBlock = 0.0;
 float moveBlock_side = 0.0;
+
+// Generates a random number to see if its even or odd
+// If even, the left box is the correct box
+void generateRandomNumber() {
+	int r = (rand() % 100) + 1;
+	if (r % 2 == 0) {
+		leftBox = true;
+	}
+	else {
+		leftBox = false;
+	}
+}
 
 void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 	for (Vec3f i : mesh->dot_vertex) {
@@ -59,25 +90,64 @@ void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
 
 // callback function for keyboard (alfanumeric keys)
 void callbackKeyboard(unsigned char key, int x, int y) {
-
 	switch (key) {
 	case 'w': case 'W':
-		jet.rotation[0] += .1;
+		looky += .1;
 		break;
 	case 's': case 'S':
-		jet.rotation[0] -= .1;
+		looky -= .1;
 		break;
 	case 'a': case 'A':
-		jet.rotation[1] += .1;
+		camera_y -= 50;
 		break;
 	case 'd': case 'D':
-		jet.rotation[1] -= .1;
+		camera_y += 50;
 		break;
-	case 'q': case 'Q':
-		jet.rotation[2] -= .1;
+	case 'l': case 'L':
+		if (camera_x > -895 && camera_x < 655 && camera_z > -16890 && camera_z < -14800 && doOnce == true) {
+			if (leftBox) {
+				correctChoice = true;
+				totalScore++;
+				doOnce = false;
+				raiseAndLower = true;
+				getInBox = false;
+				break;
+			}
+			else {
+				correctChoice = false;
+				raiseAndLower = true;
+				getInBox = false;
+				break;
+			}
+		}
+		else {
+			getInBox = true;
+		}
 		break;
-	case 'e': case 'E':
-		jet.rotation[2] += .1;
+	case 'r': case 'R':
+		if (camera_x > -895 && camera_x < 655
+			&& camera_z > -16890 && camera_z < -14800 && doOnce == true) {
+			if (!leftBox) {
+				correctChoice = true;
+				totalScore++;
+				doOnce = false;
+				raiseAndLower = true;
+				getInBox = false;
+				break;
+			}
+
+			else {
+				correctChoice = false;
+				raiseAndLower = true;
+				getInBox = false;
+				break;
+			}
+		}
+		else {
+			getInBox = true;
+		}
+		break;
+
 	}
 
 	if (jet.position[0] > meshSize) {
@@ -96,24 +166,39 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 	}
 }
 
+// callback function for arrows
+void moveMeFlat(int i) {
+	camera_x = camera_x + i * (lookx)*1.0;
+	camera_z = camera_z + i * (lookz)*1.0;
+}
+
+void orientMe(float ang) {
+	lookx = sin(ang);
+	lookz = -cos(ang);
+}
+
 void specialkeys(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
-		jet.rotation[0] += 5;
-
+		moveMeFlat(moveSpeed);
 		break;
 	case GLUT_KEY_DOWN:
-		jet.rotation[0] -= 5;
+		moveMeFlat(-moveSpeed);
 		break;
 	case GLUT_KEY_LEFT:
-
+		angle -= 0.1f;
+		orientMe(angle);
+		playerLook += 5;
 		jet.rotation[1] += 5;
 		break;
 	case GLUT_KEY_RIGHT:
-
+		angle += 0.1f;
+		orientMe(angle);
+		playerLook -= 5;
 		jet.rotation[1] -= 5;
 		break;
 	}
 
 	glutPostRedisplay();
+
 }

@@ -142,7 +142,6 @@ public:
 };
 
 ParticleSystem ps;
-ParticleSystem ps2;
 
 void updateParticles(float deltaTime) {
 	if (areParticlesOn) {
@@ -150,11 +149,8 @@ void updateParticles(float deltaTime) {
 		for (int i = 0; i < 50; i++) {
 			ps.add();
 		}
-		ps2.add();
 	}
 
 	ps.update(deltaTime);
-	ps2.update(deltaTime);
-	ps2.remove();
 	ps.remove();
 }
