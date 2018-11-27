@@ -255,16 +255,22 @@ void display(void) {
 		glPopMatrix();
 	}
 
-	//==========================
-	// jet
-	//==========================
-	//glPushMatrix();
-	//	glTranslatef( camera_x, camera_y - 100, camera_z - 500 );
-	//	glRotatef(180 + jet_rotate, 0.0, 1.0, 0.0);
-	//	glTranslatef(lookx, looky, lookz);
-	//	glScalef(10, 10, 10);
-	//	glCallList(jetMesh); 
-	//glPopMatrix();
+	//jet
+	glPushMatrix();
+	glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
+	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
+	glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
+	Vec3f point = jetFollower.setNextPoint();
+	if (jetFollower.indexAtEnd()) {
+		jetFollower = CurveFollower(&jetCurveEnd);
+	}
+	printf("%d %d %d \n", point.x, point.y, point.z);
+	glScalef(100, 100, 100);
+
+	glTranslatef(point.x, point.y +100, point.z + 50);
+
+	glCallList(jetMesh); 
+	glPopMatrix();
 
 	//plane
 	glPushMatrix();

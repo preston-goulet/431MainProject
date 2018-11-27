@@ -31,19 +31,19 @@ makeMeshFrom2Lines(&top, &bottom);
 class Curve {
 public:
 	int numberPoints;
-	Vec3f* start;
-	Vec3f* stop;
-	Vec3f* tanStart;
-	Vec3f* tanStop;
+	Vec3f start;
+	Vec3f stop;
+	Vec3f tanStart;
+	Vec3f tanStop;
 	vector<Vec3f> points;
 	Curve() {
-		start = new Vec3f(0.0f, 0.0f, 0.0f);
-		stop = new Vec3f(0.0f, 0.0f, 0.0f);
-		tanStart = new Vec3f(0.0f, 0.0f, 0.0f);
-		tanStop = new Vec3f(0.0f, 0.0f, 0.0f);
+		start = Vec3f(0.0f, 0.0f, 0.0f);
+		stop = Vec3f(0.0f, 0.0f, 0.0f);
+		tanStart = Vec3f(0.0f, 0.0f, 0.0f);
+		tanStop = Vec3f(0.0f, 0.0f, 0.0f);
 		numberPoints = 128;
 	}
-	Curve(Vec3f* startVec3f, Vec3f* stopVec3f, Vec3f* tanStartVec3f, Vec3f* tanStopVec3f, int numPoints) {
+	Curve(Vec3f startVec3f, Vec3f stopVec3f, Vec3f tanStartVec3f, Vec3f tanStopVec3f, int numPoints) {
 		start = startVec3f;
 		stop = stopVec3f;
 		tanStart = tanStartVec3f;
@@ -66,9 +66,9 @@ vector<Vec3f> Curve::calculatePoints() {
 		float b2 = t * t*t - 2 * t*t + t;
 		float b3 = t * t*t - t * t;
 		// calculate the x, y and z of the curve point
-		float x = b0 * start->x + b1 * stop->x + b2 * tanStart->x + b3 * tanStop->x;
-		float y = b0 * start->y + b1 * stop->y + b2 * tanStart->y + b3 * tanStop->y;
-		float z = b0 * start->z + b1 * stop->z + b2 * tanStart->z + b3 * tanStop->z;
+		float x = b0 * start.x + b1 * stop.x + b2 * tanStart.x + b3 * tanStop.x;
+		float y = b0 * start.y + b1 * stop.y + b2 * tanStart.y + b3 * tanStop.y;
+		float z = b0 * start.z + b1 * stop.z + b2 * tanStart.z + b3 * tanStop.z;
 		// specify the point
 		points.push_back(Vec3f(x, y, z));
 	}
@@ -97,14 +97,14 @@ void Curve::drawPoints() {
 	glEnd();
 }
 
-Curve jetCurve = Curve(&Vec3f(-10, -10, 0),
-	&Vec3f(10, 10, 0),	
-	&Vec3f(0, -10, 0),
-	&Vec3f(0, 10, 0), 128
+Curve jetCurveStart = Curve(Vec3f(-10, -10, -10),
+	Vec3f(10, 10, 10),	
+	Vec3f(10, 0, 0),
+	Vec3f(-10, 0, 0), 128
 );
 
-Curve bulletCurve = Curve(&Vec3f(0, 0, 0),
-	&Vec3f(0, -100, 1000),
-	&Vec3f(0, -10, 0),
-	&Vec3f(0, 10, 0), 128
+Curve jetCurveEnd = Curve(Vec3f(10, 10, 10),
+	Vec3f(-10, -10, -10),
+	Vec3f(-10, 0, 0),
+	Vec3f(10, 0, 0), 128
 );
