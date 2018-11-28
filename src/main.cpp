@@ -262,11 +262,10 @@ void display(void) {
 	glTranslatef(pathLocation[0], pathLocation[1], pathLocation[2]);
 	glScalef(100, 100, 100);
 	jetPath.drawPath();
+	glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
 	glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
 	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
-	glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
-	glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
-		
+	glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);	
 	glCallList(jetMesh); 
 	glPopMatrix();
 
