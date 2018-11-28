@@ -40,6 +40,7 @@ void display(void) {
 	glTranslatef(0.0f, 0.0f, 0.0f);
 	glPopMatrix();
 
+
 	// Raises and lowers the boxes to reveal the flames
 	if (raiseAndLower) {
 		if (lowerBox == false && boxMovement < 200) {
@@ -217,8 +218,6 @@ void display(void) {
 			ps.add();
 		}
 	}
-
-
 	ps.update(time);
 
 	if (leftBox) {
@@ -245,35 +244,35 @@ void display(void) {
 		glPushMatrix();
 		glDisable(GL_LIGHTING);
 		glColor3f(1.0, 1.0, 0.0);
-		glTranslatef(camera_x, camera_y - 100, camera_z - 500);
-		glRotatef(180 + jet.rotation[1], 0.0, 1.0, 0.0);
-		glTranslatef(lookx, looky, lookz);
-		glScalef(10, 10, 10);
+		glTranslatef(pathLocation[0], pathLocation[1], pathLocation[2]);
+		glScalef(100, 100, 100);
+		glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
+		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
+		glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
+		glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);		
 		glCallList(boundingBox);
-
 		glEnable(GL_LIGHTING);
 		glPopMatrix();
 	}
 
 	//jet
 	glPushMatrix();
+	jetPath.update();
+	jetPath.updateRotation();
+	glTranslatef(pathLocation[0], pathLocation[1], pathLocation[2]);
+	glScalef(100, 100, 100);
+	jetPath.drawPath();
 	glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
 	glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
 	glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
-	Vec3f point = jetFollower.setNextPoint();
-	if (jetFollower.indexAtEnd()) {
-		jetFollower = CurveFollower(&jetCurveEnd);
-	}
-	printf("%d %d %d \n", point.x, point.y, point.z);
-	glScalef(100, 100, 100);
-
-	glTranslatef(point.x, point.y +100, point.z + 50);
-
+	glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
+		
 	glCallList(jetMesh); 
 	glPopMatrix();
 
 	//plane
 	glPushMatrix();
+	glColor3f(1.0, 1.0, 1.0);
 	glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
 	glCallList(display1);
 	glPopMatrix();
@@ -314,6 +313,7 @@ void display(void) {
 	glColor3f(0.0, 1.0, 0.0);
 	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
 	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
+	renderBitmapString(0.0, window_height - 39.0f, 0.0f, "Use [L and R] to select the left or right boxes respectively.");
 	renderBitmapString((window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: ");
 	renderBitmapString((window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str());
 	if (getInBox) {

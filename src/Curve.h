@@ -10,24 +10,6 @@ using namespace std;
 typedef Vec3<float> Vec3f;
 typedef Vec2<float> Vec2f;
 
-/*
-//Top
-Vec3f start = Vec3f(right_x, right_y, right_z);
-Vec3f stop = Vec3f(left_x + 100, left_y, left_z);
-Vec3f tan1 = Vec3f(-250, 0, -500);
-Vec3f tan2 = Vec3f(-250, 0, -500);
-
-vector<Vec3f> top = calculatePoints(&start, &stop, &tan1, &tan2);
-
-//Bottom
-start = Vec3f(right_x, right_y - 100, right_z);
-stop = Vec3f(left_x + 100, left_y - 100, left_z);
-
-vector<Vec3f> bottom = calculatePoints(&start, &stop, &tan1, &tan2);
-
-makeMeshFrom2Lines(&top, &bottom);
-*/
-
 class Curve {
 public:
 	int numberPoints;
@@ -54,6 +36,7 @@ public:
 	vector<Vec3f> calculatePoints();
 	void drawLines();
 	void drawPoints();
+	Vec3f getPoint(int index);
 };
 
 vector<Vec3f> Curve::calculatePoints() {
@@ -76,35 +59,41 @@ vector<Vec3f> Curve::calculatePoints() {
 	return points;
 }
 
+Vec3f Curve::getPoint(int index) {
+	if (index >= points.size()) {
+		index = numberPoints - 1;
+	}
+	return points.at(index);
+}
+
 void Curve::drawLines() {
 	glBegin(GL_LINE_STRIP);
-	// use the parametric time value 0 to 1
-	for (int i = 0; i != numberPoints; ++i) {
-		// specify the point
-		glVertex3f(points.at(i).x, points.at(i).y, points.at(i).z);
+	for (int i = 1; i < points.size() ; ++i) {	
+
+		Vec3f point = getPoint(i);
+		glVertex3f(point.x, point.y, point.z);		
 	}
 	glEnd();
-
 }
 
 void Curve::drawPoints() {
 	glBegin(GL_POINTS);
-	// use the parametric time value 0 to 1
-	for (int i = 0; i != numberPoints; ++i) {
-		// specify the point
-		glVertex3f(points.at(i).x, points.at(i).y, points.at(i).z);
+	for (int i = 0; i != points.size(); ++i)
+	{
+		Vec3f point = getPoint(i);
+		glVertex3f(point.x, point.y, point.z);
 	}
 	glEnd();
 }
 
-Curve jetCurveStart = Curve(Vec3f(-10, -10, -10),
-	Vec3f(10, 10, 10),	
-	Vec3f(10, 0, 0),
-	Vec3f(-10, 0, 0), 128
+Curve jetCurveStart = Curve(Vec3f(-100, 0, -100),
+	Vec3f(100, 0, 100),	
+	Vec3f(100, 0, 0),
+	Vec3f(-100, 0, 0), 500
 );
 
-Curve jetCurveEnd = Curve(Vec3f(10, 10, 10),
-	Vec3f(-10, -10, -10),
-	Vec3f(-10, 0, 0),
-	Vec3f(10, 0, 0), 128
+Curve jetCurveEnd = Curve(Vec3f(100, 0, 100),
+	Vec3f(-100, 0, -100),
+	Vec3f(-100, 0, 0),
+	Vec3f(100, 0, 0), 500
 );

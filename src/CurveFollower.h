@@ -9,6 +9,7 @@ public:
 		curve = new Curve();
 	}
 	CurveFollower(Curve* c) {
+		index = 0;
 		curve = c;
 		curve->points = curve->calculatePoints();
 	}
@@ -19,7 +20,6 @@ public:
 	Vec3f setPrevPoint();
 	Vec3f setIndex(int curveIndex);
 	bool indexAtEnd();
-	
 };
 
 Vec3f CurveFollower::getCurrentPoint() {
@@ -68,7 +68,7 @@ Vec3f CurveFollower::setIndex(int curveIndex) {
 }
 
 bool CurveFollower::indexAtEnd() {
-	return index == curve->numberPoints;
+	return index == curve->numberPoints -1;
 }
 
 CurveFollower jetFollower = CurveFollower(&jetCurveStart);
