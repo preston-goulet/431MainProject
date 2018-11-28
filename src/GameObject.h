@@ -95,6 +95,14 @@ public:
 		position[1] += y;
 		position[2] += z;
 	}
+
+	void calculateRotation(Vec3f vector) {
+
+		vector.normalize();
+		rotation[0] = 1 / tan(vector.y / vector.x);
+		rotation[1] = 1 / tan(vector.z / vector.x);
+		rotation[2] = 1 / tan(vector.y / vector.z);
+	}
 };
 
 GameObject jet = GameObject(
@@ -102,7 +110,7 @@ GameObject jet = GameObject(
 	0.0f, 0.0f, -100.0f,
 	0.0f, 0.0f, 10.0f,
 	90.0f, 180.0f, 0.0f,
-	true);
+	false);
 
 void updateGameObjects(float deltaTime) {	
 	jet.update(deltaTime);

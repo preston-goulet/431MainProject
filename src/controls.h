@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include <math.h>
 #include <GL/glut.h>
 #include "GameObject.h"
+#include "Camera.h"
 
 int window_width = 800, window_height = 800;
 float window_ratio = 1.0;
@@ -20,15 +20,6 @@ float scale = 0.3;
 float x_angle = 0.0;
 float y_angle = 0.0;
 
-// camera
-float camera_x = 0.0;
-float camera_y = 500.0;
-float camera_z = 600.0;
-float camera_rotate = 0;
-float camera_viewing_x = 0.0;
-float camera_viewing_y = 300.0;
-float camera_viewing_z = 0.0;
-
 int totalScore = 00;
 int countDown = 10000;
 int moveSpeed = 500;
@@ -37,10 +28,6 @@ float angle = 0;
 
 bool raiseAndLower = false;
 bool getInBox = true;
-
-//Moving Flat
-//float camera_x = 0.0f, camera_y = 20.0f, camera_z = 5.0f;
-float lookx = 0.0f, looky = 0.0f, lookz = -1.0f;
 bool doOnce = true;
 
 float total_moving_angle = 0.0;
@@ -48,7 +35,6 @@ float total_moving_angle = 0.0;
 const int perlinMeshSize = 80000;
 
 float meshSize = (perlinMeshSize - 1) / 2;
-int cameraSpeed = 1;
 int boxSpeed = 10;
 
 float runway_x = -950;
@@ -166,17 +152,6 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 	}
 }
 
-// callback function for arrows
-void moveMeFlat(int i) {
-	camera_x = camera_x + i * (lookx)*1.0;
-	camera_z = camera_z + i * (lookz)*1.0;
-}
-
-void orientMe(float ang) {
-	lookx = sin(ang);
-	lookz = -cos(ang);
-}
-
 void specialkeys(int key, int x, int y) {
 	switch (key) {
 	case GLUT_KEY_UP:
@@ -189,13 +164,13 @@ void specialkeys(int key, int x, int y) {
 		angle -= 0.1f;
 		orientMe(angle);
 		playerLook += 5;
-		jet.rotation[1] += 5;
+
 		break;
 	case GLUT_KEY_RIGHT:
 		angle += 0.1f;
 		orientMe(angle);
 		playerLook -= 5;
-		jet.rotation[1] -= 5;
+
 		break;
 	}
 

@@ -15,6 +15,7 @@
 #include "Curve.h"
 #include "CurveFollower.h"
 #include "nurbs_flag.h"
+#include "ObjectPathing.h"
 
 
 // global
