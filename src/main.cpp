@@ -13,7 +13,9 @@ void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
 	float time = calculate_frame_time();
-	updateParticles(time);
+	ps.updateParticles(time);
+	rain.updateParticles(time);
+	leaves.updateParticles(time);
 	updateGameObjects(time);
 	updateLights();	
 
@@ -74,7 +76,7 @@ void display(void) {
 	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
 	glTranslatef(400, shadowHeight + 700, playArea);
 	glScalef(100, 100, 100);
-	draw_nurb();
+	draw_nurb(textures[9]);
 	glPopMatrix();
 
  	//flag reflection
@@ -222,10 +224,13 @@ void display(void) {
 	glPopMatrix();
 
 	//========Regular 3d environment=====================================
+	
+
 	glEnable(GL_BLEND);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_LIGHT0);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glPushMatrix();
 	glColor4f(0.7, 0.0, 0.0, 0.9);
 	glColor4f(1.0, 1.0, 1.0, 0.9);
 
@@ -254,39 +259,33 @@ void display(void) {
 	glDisable(GL_BLEND);
 	glEnable(GL_LIGHT0);
 
-	//============================================
-	//	Exhaust flames
-	//============================================
-
-	if (areParticlesOn) {
-		//Particles with box 1
-		for (int i = 0; i < 50; i++) {
-			ps.add();
-		}
-	}
-	ps.update(time);
-
+	//Particles
 	if (leftBox) {
 		glPushMatrix();
 		glTranslatef(-150, shadowHeight, playArea + 50);
 		glScalef(.1, .1, .1);
-		ps.drawParticles();//flames
+		ps.drawDefaultParticles();//flames
 		glPopMatrix();
-
-		ps.remove();
 	}
 	else {
 		glPushMatrix();
 		glTranslatef(250, shadowHeight, playArea + 50);
 		glScalef(.1, .1, .1);
-		ps.drawParticles();//flames
+		ps.drawDefaultParticles();//flames
 		glPopMatrix();
-
-		ps.remove();
 	}
 
-	if (areBoundingBoxesOn) {
-		//bounding box
+	//Camera Location
+	glPushMatrix();
+	glTranslatef(camera_x, camera_y, camera_z);
+	glRotatef(angle + 180, 0.0f, 1.0f, 0.0f);
+	rain.draw();
+	glScalef(0.1, 0.1, 0.1);
+	leaves.draw();
+	glPopMatrix();
+
+	//bounding box
+	if (areBoundingBoxesOn) {	
 		glPushMatrix();
 		glDisable(GL_LIGHTING);
 		glColor3f(1.0, 1.0, 0.0);

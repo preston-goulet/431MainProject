@@ -24,7 +24,7 @@ Mesh *mesh[10];
 GLuint display1, display2, display3, display4, display5, display6, display7, displayBrick;
 GLuint displayLists[10];
 
-GLuint textures[5];
+GLuint textures[15];
 GLuint jetMesh, runway;
 GLuint boundingBox;
 
@@ -132,6 +132,8 @@ void init() {
 	mesh8 = loadFile("OBJfiles/f-16.obj");
 	mesh9 = createPlane(2000, 2000, 2000);
 	mesh11 = createPlane(2000, 2000, 200);
+	mesh[0] = createPlane(10, 10, 1);
+	mesh[1] = createPlane(5, 5, 1);
 
 	// normals
 	calculateNormalPerFace(mesh1);
@@ -144,6 +146,8 @@ void init() {
 	calculateNormalPerFace(mesh8);
 	calculateNormalPerFace(mesh9);
 	calculateNormalPerFace(mesh11);
+	calculateNormalPerFace(mesh[0]);
+	calculateNormalPerFace(mesh[1]);
 	calculateNormalPerVertex(mesh1);
 	calculateNormalPerVertex(mesh2);
 	calculateNormalPerVertex(mesh3);
@@ -154,6 +158,8 @@ void init() {
 	calculateNormalPerVertex(mesh8);
 	calculateNormalPerVertex(mesh9);
 	calculateNormalPerVertex(mesh11);
+	calculateNormalPerVertex(mesh[0]);
+	calculateNormalPerVertex(mesh[1]);
 
 	//Bounding point calc
 	calculateBoundingPoints(mesh8);
@@ -168,6 +174,7 @@ void init() {
 	codedTexture(textures, 6, 0); //Fire texture - noise fire. Type=2
 	loadBMP_custom(textures, "_BMP_files/runway.bmp", 7);
 	loadBMP_custom(textures, "_BMP_files/brick.bmp", 8);
+	loadBMP_custom(textures, "_BMP_files/fireParticle.bmp", 9);
 	
 	// display lists
 	display1 = meshToDisplayList(mesh1, 1, textures[0]);
@@ -180,6 +187,8 @@ void init() {
 	jetMesh = meshToDisplayListObjects(mesh8, 8);
 	runway = meshToDisplayList(mesh9, 10, textures[7]);
 	displayBrick = meshToDisplayList(mesh11, 11, textures[8]);
+	displayLists[0] = meshToDisplayList(mesh[0], 12, textures[0]);
+	displayLists[1] = meshToDisplayList(mesh[1], 13, textures[9]);
 
 	boundingBox = boundingBoxToDisplayList(mesh8, 9);
 	
@@ -225,5 +234,9 @@ void init() {
 
 	gluNurbsProperty(nurbsflag_three, GLU_DISPLAY_MODE, GLU_FILL); //GLU_OUTLINE_POLYGON
 	generateRandomNumber();
+
+	//Particles
+	leaves = ParticleSystem(displayLists[0], true, PARTICLE_LEAVES);
+	rain = ParticleSystem(displayLists[1], true, PARTICLE_RAIN);
 }
 

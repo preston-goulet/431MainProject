@@ -120,7 +120,7 @@ GLuint meshToDisplayListObjects(Mesh* m, int id) {
 		// color
 		Vec3f offset = (m->dot_vertex[m->face_index_vertex[i]]);
 		//
-		glColor3f(fabs(sin(offset.x)), fabs(cos(offset.y)), fabs(offset.z));
+		//glColor3f(fabs(sin(offset.x)), fabs(cos(offset.y)), fabs(offset.z));
 		glVertex3fv(&m->dot_vertex[m->face_index_vertex[i]].x);
 	}
 
