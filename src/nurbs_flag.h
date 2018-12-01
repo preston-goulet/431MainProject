@@ -23,6 +23,10 @@ GLfloat ctlpoints[V_NUMPOINTS][U_NUMPOINTS][3] = {
 	{ { 0., 0., 0. },{ 1., 0., 0. },{ 2., 0., 0 },{ 3., 0., 0. } }
 };
 
+GLfloat textPoints[2][2][2] = {
+	{{0.0f, 0.0f}, {0.0f, 1.0f} },
+	{{1.0f, 0.0f}, {1.0f, 1.0f} }
+};
 
 GLUnurbsObj *nurbsflag;          //original
 GLUnurbsObj *nurbsflag_two;      //reflection
@@ -51,7 +55,7 @@ void draw_control_graph(GLfloat cpoints[V_NUMPOINTS][U_NUMPOINTS][3]) {
 
 
 // draw_nurb
-void draw_nurb() {
+void draw_nurb(GLuint texture) {
 	static GLfloat angle = 0.0;
 	int i, j;
 	// wave the flag by rotating Z coords though a sine wave

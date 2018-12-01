@@ -12,7 +12,6 @@ float camera_viewing_y = 300.0;
 float camera_viewing_z = 0.0;
 
 //Moving Flat
-//float camera_x = 0.0f, camera_y = 20.0f, camera_z = 5.0f;
 float lookx = 0.0f, looky = 0.0f, lookz = -1.0f;
 
 // callback function for arrows
