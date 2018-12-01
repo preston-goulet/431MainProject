@@ -52,6 +52,10 @@ int boxMovement = 0; //Added to the y value of the boxes when they need to be ra
 float moveBlock = 0.0;
 float moveBlock_side = 0.0;
 
+int lightning_x = 0;
+int lightning_z = 0;
+bool showLightning = true;
+
 // Generates a random number to see if its even or odd
 // If even, the left box is the correct box
 void generateRandomNumber() {
@@ -62,6 +66,12 @@ void generateRandomNumber() {
 	else {
 		leftBox = false;
 	}
+}
+
+void generateLightningPos() {
+	lightning_x = (rand() % 100000 - 50000);
+	lightning_z = (rand() % 100000 - 50000);
+
 }
 
 void updateBoxPositon(Mesh* mesh, int xOffset, int zOffset) {
