@@ -22,7 +22,7 @@ float y_angle = 0.0;
 
 int totalScore = 00;
 int countDown = 10000;
-int moveSpeed = 500;
+int moveSpeed = 100;
 float playerLook = 0;
 float angle = 0;
 
@@ -90,7 +90,7 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 		camera_y += 50;
 		break;
 	case 'l': case 'L':
-		if (camera_x > -895 && camera_x < 655 && camera_z > -16890 && camera_z < -14800 && doOnce == true) {
+		if (camera_x > -895 && camera_x < 1236 && camera_z > -16890 && camera_z < -14800 && doOnce == true) {
 			if (leftBox) {
 				correctChoice = true;
 				totalScore++;
@@ -111,7 +111,7 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 		}
 		break;
 	case 'r': case 'R':
-		if (camera_x > -895 && camera_x < 655
+		if (camera_x > -895 && camera_x < 1236
 			&& camera_z > -16890 && camera_z < -14800 && doOnce == true) {
 			if (!leftBox) {
 				correctChoice = true;

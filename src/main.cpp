@@ -100,7 +100,6 @@ void display(void) {
 	glCallList(display3);
 	glPopMatrix();
 	glPushMatrix();
-	doOnce = false;
 	glTranslatef(-200, shadowHeight, playArea);
 	glScalef(1.0, -1.0, 1.0);
 	glCallList(display4);
