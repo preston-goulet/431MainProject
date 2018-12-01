@@ -4,11 +4,12 @@
 #include <GL/glut.h>
 #include <glut.h>
 #include <fstream>
+#include "Menu.h"
 #include "mesh.h"
 #include "texture.h"
 #include "render.h"
 #include "controls.h"
-#include "Menu.h"
+
 #include "particles.h"
 #include "timer.h"
 #include "GameObject.h"
@@ -82,6 +83,7 @@ void init() {
 	mesh11 = createPlane(2000, 2000, 200);
 	mesh[0] = createPlane(10, 10, 1);
 	mesh[1] = createPlane(5, 5, 1);
+	mesh[2] = createPlane(80000, 80000, 400);
 
 	// normals
 	calculateNormalPerFace(mesh1);
@@ -96,6 +98,7 @@ void init() {
 	calculateNormalPerFace(mesh11);
 	calculateNormalPerFace(mesh[0]);
 	calculateNormalPerFace(mesh[1]);
+	calculateNormalPerFace(mesh[2]);
 	calculateNormalPerVertex(mesh1);
 	calculateNormalPerVertex(mesh2);
 	calculateNormalPerVertex(mesh3);
@@ -108,6 +111,7 @@ void init() {
 	calculateNormalPerVertex(mesh11);
 	calculateNormalPerVertex(mesh[0]);
 	calculateNormalPerVertex(mesh[1]);
+	calculateNormalPerVertex(mesh[2]);
 
 	//Bounding point calc
 	calculateBoundingPoints(mesh8);
@@ -137,21 +141,36 @@ void init() {
 	displayBrick = meshToDisplayList(mesh11, 11, textures[8]);
 	displayLists[0] = meshToDisplayList(mesh[0], 12, textures[0]);
 	displayLists[1] = meshToDisplayList(mesh[1], 13, textures[9]);
+	displayLists[2] = meshToDisplayList(mesh[2], 14, textures[0]);
 
 	boundingBox = boundingBoxToDisplayList(mesh8, 9);
 	
 	// light
-	glEnable(GL_LIGHT0);
-	glEnable(GL_LIGHTING);
-	GLfloat light_ambient[]  = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_diffuse[]  = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_ambient[] = { 0.5, 0.5, 0.5, 1.0 };
+	GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-	GLfloat light_position[] = { 0.0, 0.0, 1.0, 0.0 };
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHTING);
+
+	GLfloat mat_diffuse[] = { 0.75f, 0.75f, 0.75f, 1. };
+	GLfloat mat_specular[] = { 0.75f, 0.75f, 0.75f, 1. };
+	GLfloat mat_ambient[] = { 0.75f, 0.75f, 0.75f, 1. };
+	glEnable(GL_DEPTH_TEST);
+	glMatrixMode(GL_PROJECTION);
+	gluPerspective(60, 1.0, 1.0, 10.0);
+	glMatrixMode(GL_MODELVIEW);
+	glTranslatef(0., 0., -6.);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_AUTO_NORMAL);
+	glEnable(GL_NORMALIZE);
 	// Fog
 	glEnable(GL_FOG);
 	glFogi(GL_FOG_MODE, GL_LINEAR);
@@ -174,7 +193,7 @@ void init() {
 	//=========================================
 	//Original
 	nurbsflag = gluNewNurbsRenderer();
-	gluNurbsProperty(nurbsflag, GLU_SAMPLING_TOLERANCE, 100.0);
+	gluNurbsProperty(nurbsflag, GLU_SAMPLING_TOLERANCE, 25.0);
 
 	//Shadow
 	nurbsflag_three = gluNewNurbsRenderer();
@@ -186,5 +205,11 @@ void init() {
 	//Particles
 	leaves = ParticleSystem(displayLists[0], true, PARTICLE_LEAVES);
 	rain = ParticleSystem(displayLists[1], true, PARTICLE_RAIN);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_NORMALIZE);
+	glEnable(GL_AUTO_NORMAL);
 }
 

@@ -84,10 +84,15 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 		looky -= .1;
 		break;
 	case 'a': case 'A':
-		camera_y -= 50;
+		if(!isGameModeOn){
+			camera_y -= 50;
+		}
+		
 		break;
 	case 'd': case 'D':
-		camera_y += 50;
+		if (!isGameModeOn) {
+			camera_y += 50;
+		}
 		break;
 	case 'l': case 'L':
 		if (camera_x > -895 && camera_x < 655 && camera_z > -16890 && camera_z < -14800 && doOnce == true) {

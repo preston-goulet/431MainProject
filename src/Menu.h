@@ -13,11 +13,12 @@ bool areCurvePointsOn = true;
 bool areLightsOn = true;
 bool areTexturesWithImagesOn = true;
 bool isProceduralTextureGenOn = true;
-bool areMaterialsOn = true;
+bool areMaterialsOn = false;
 bool isGameModeOn = true;
 bool areCollisionsOn = true;
 bool isMultiscaleTerrainOn = true;
 bool areRecursiveFractalsOn = true;
+bool areNURBsGridsOn = true;
 
 void menuListener(int option) {
 	switch (option) {
@@ -69,6 +70,9 @@ void menuListener(int option) {
 	case 15:
 		areRecursiveFractalsOn = !areRecursiveFractalsOn;
 		break;
+	case 16:
+		areNURBsGridsOn = !areNURBsGridsOn;
+		break;
 	}
 	glutPostRedisplay();
 }
@@ -93,6 +97,7 @@ void addMenu() {
 	glutAddMenuEntry("Toggle Collisions", 13);
 	glutAddMenuEntry("Toggle Multiscale Terrain", 14);
 	glutAddMenuEntry("Toggle Recursive Fractals", 15);
+	glutAddMenuEntry("Toggle NURBS grid", 16);
 
 	// create main menu
 	int menu = glutCreateMenu(menuListener);

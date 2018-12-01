@@ -24,3 +24,9 @@ void orientMe(float ang) {
 	lookx = sin(ang);
 	lookz = -cos(ang);
 }
+
+void updateCamera() {
+	if(isGameModeOn) {
+		camera_y = 500;
+	}
+}

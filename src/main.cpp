@@ -12,12 +12,16 @@
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	
+	//Updates
 	float time = calculate_frame_time();
 	ps.updateParticles(time);
 	rain.updateParticles(time);
 	leaves.updateParticles(time);
+	jetPath.update();
+	jetPath.updateRotation();
 	updateGameObjects(time);
-	updateLights();	
+	updateLights();
+	updateCamera();
 
 	// projection
 	glMatrixMode(GL_PROJECTION);
@@ -67,46 +71,37 @@ void display(void) {
 	//====================
  	//flag
 	glPushMatrix();
-	GLfloat mat_diffuse[] = { 1.0f, 0.5f, 0.31f, 1. };
-	GLfloat mat_specular[] = { 0.5f, 0.5f, 0.5f, 1. };
-	GLfloat mat_ambient[] = { 1.0f, 0.5f, 0.31f, 1. };
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
 	glTranslatef(400, shadowHeight + 700, playArea);
 	glScalef(100, 100, 100);
 	draw_nurb(textures[9]);
-	glPopMatrix();
+	glPopMatrix();	
 
- 	//flag reflection
-	glPushMatrix();
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0);
-	glTranslatef(400, shadowHeight - 700, playArea);
-	glScalef(100, -100, 100);
-	draw_nurb3();
-	glPopMatrix();
+	if (isReflectionOn) {
+		// boxes reflections
+		glPushMatrix();
+		glTranslatef(0, shadowHeight, playArea);
+		glScalef(1.0, -10.0, 1.0);
+		glCallList(display2);
+		glPopMatrix();
+		glPushMatrix();
+		glTranslatef(200, shadowHeight, playArea);
+		glScalef(1.0, -1.0, 1.0);
+		glCallList(display3);
+		glPopMatrix();
+		glPushMatrix();
+		glTranslatef(-200, shadowHeight, playArea);
+		glScalef(1.0, -1.0, 1.0);
+		glCallList(display4);
+		glPopMatrix();
 
- 	// boxes reflections
-	glPushMatrix();
-	glTranslatef(0, shadowHeight, playArea);
-	glScalef(1.0, -10.0, 1.0);
-	glCallList(display2);
-	glPopMatrix();
-	glPushMatrix();
-	glTranslatef(200, shadowHeight, playArea);
-	glScalef(1.0, -1.0, 1.0);
-	glCallList(display3);
-	glPopMatrix();
-	glPushMatrix();
-	doOnce = false;
-	glTranslatef(-200, shadowHeight, playArea);
-	glScalef(1.0, -1.0, 1.0);
-	glCallList(display4);
-	glPopMatrix();
+		//flag reflection
+		glPushMatrix();
+		
+		glTranslatef(400, shadowHeight - 700, playArea);
+		glScalef(100, -100, 100);
+		draw_nurb3();
+		glPopMatrix();
+	}
 
 	//========================================
 	//	Shadows
@@ -133,6 +128,9 @@ void display(void) {
 	glDisable(GL_BLEND);
 	// Shadows
 	if (areShadowsOn) {
+		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
+		glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_LIGHTING);  /* Force the 50% black. */
 		glColor4f(0.0, 0.0, 0.0, 0.5);
@@ -143,13 +141,24 @@ void display(void) {
 		glDisable(GL_DEPTH_TEST);
 		glScalef(0, 10, 0);
 		glCallList(display2);
-		glTranslatef(200, shadowHeight, playArea);
+		glTranslatef(0, shadowHeight, playArea);
 		glCallList(display3);
-		glTranslatef(-400, shadowHeight, playArea);
+		glTranslatef(200, shadowHeight + boxMovement, playArea);
 		glCallList(display4);
-		glTranslatef(100, shadowHeight + 100, playArea + 100);
+		glTranslatef(-200, shadowHeight + boxMovement + 50, playArea);
 		glScalef(100, 100, 100);
 		draw_nurb3();
+		//jet
+		glPushMatrix();
+		glTranslatef(pathLocation[0], pathLocation[1], pathLocation[2]);
+		glScalef(100, 100, 100);
+		glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
+		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
+		glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
+		glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
+		glCallList(jetMesh);
+		glPopMatrix();
+
 		glEnable(GL_DEPTH_TEST);
 		glPopMatrix();
 
@@ -188,11 +197,12 @@ void display(void) {
 	glColor4f(0.7, 0.0, 0.0, 0.9);
 	glColor4f(1.0, 1.0, 1.0, 0.9);
 
-
 	// skybox
 	glPushMatrix();
+	glDisable(GL_LIGHTING);
 	glTranslatef(-skyBoxMeshSize / 2, -skyBoxMeshSize / 2, -skyBoxMeshSize / 2);
 	glCallList(display5);
+	glEnable(GL_LIGHTING);
 	glPopMatrix();
 
 	//Water
@@ -216,14 +226,14 @@ void display(void) {
 	//Particles
 	if (leftBox) {
 		glPushMatrix();
-		glTranslatef(-150, shadowHeight, playArea + 50);
+		glTranslatef(-150, shadowHeight + 5, playArea + 50);
 		glScalef(.1, .1, .1);
 		ps.drawDefaultParticles();//flames
 		glPopMatrix();
 	}
 	else {
 		glPushMatrix();
-		glTranslatef(250, shadowHeight, playArea + 50);
+		glTranslatef(250, shadowHeight + 5, playArea + 50);
 		glScalef(.1, .1, .1);
 		ps.drawDefaultParticles();//flames
 		glPopMatrix();
@@ -234,7 +244,7 @@ void display(void) {
 	glTranslatef(camera_x, camera_y, camera_z);
 	glRotatef(angle + 180, 0.0f, 1.0f, 0.0f);
 	rain.draw();
-	glScalef(0.1, 0.1, 0.1);
+	glScalef(0.5, 0.5, 0.5);
 	leaves.draw();
 	glPopMatrix();
 
@@ -272,7 +282,13 @@ void display(void) {
 	glPushMatrix();
 	glColor3f(1.0, 1.0, 1.0);
 	glTranslatef(-perlinMeshSize / 2, 0, -perlinMeshSize / 2);
-	glCallList(display1);
+	if (isMultiscaleTerrainOn) {
+		glCallList(display1);
+	}
+	else {
+		glCallList(displayLists[2]);
+	}
+	
 	glPopMatrix();
 
 	//runway
@@ -283,9 +299,13 @@ void display(void) {
 		glPopMatrix();
 	}
 
+	glPushMatrix();
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	if (isLightArrowOn) {
 		drawLightArrow();
 	}
+	glPopMatrix();
+
 
 	//end
 	glMatrixMode(GL_PROJECTION);
@@ -330,6 +350,14 @@ void display(void) {
 	glColor3f(1.0, 1.0, 1.0);
 	renderBitmapString(10.0, window_height / 8, 0.0f, "Score: ");
 	renderBitmapString(70, window_height / 8, 0.0f, scoreString.c_str());
+
+	if (isGameModeOn) {
+		renderBitmapString(10.0, window_height / 9, 0.0f, "Game Mode On");
+	} 
+	else {
+		renderBitmapString(10.0, window_height / 9, 0.0f, "View Mode On");
+		renderBitmapString(0.0, window_height - 52.0f, 0.0f, "Use [A and D] to move up and down");
+	}
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();

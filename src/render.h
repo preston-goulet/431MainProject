@@ -176,10 +176,28 @@ GLuint boundingBoxToDisplayList(Mesh* m, int id) {
 
 void updateLights() {
 	// light source position
-	light_position[0] = 500 * cos(lightAngle) + 1000;
-	light_position[1] = lightHeight;
-	light_position[2] = 500 * sin(lightAngle) - 1000;
-	light_position[3] = 0.0; // directional light
+	if (areMaterialsOn) {
+		glEnable(GL_COLOR_MATERIAL);
+	}
+	else {
+		glDisable(GL_COLOR_MATERIAL);
+	}
+
+	if (areLightsOn) {
+		glEnable(GL_LIGHTING);
+		glEnable(GL_LIGHT0);
+	}
+	else {
+		glDisable(GL_LIGHTING);
+		glDisable(GL_LIGHT0);
+	}
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	light_position[0] = 500 * cos(lightAngle) ;
+	light_position[1] = lightHeight + 100;
+	light_position[2] = 500 * sin(lightAngle)- 16000;
+	light_position[3] = 1.0; // directional light
 	lightAngle += 0.0005;
 	// Calculate Shadow matrix
 	shadowMatrix(shadow_matrix, floor_normal, light_position);
