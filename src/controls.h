@@ -97,13 +97,11 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 				doOnce = false;
 				raiseAndLower = true;
 				getInBox = false;
-				break;
 			}
 			else {
 				correctChoice = false;
 				raiseAndLower = true;
 				getInBox = false;
-				break;
 			}
 		}
 		else {
@@ -119,14 +117,12 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 				doOnce = false;
 				raiseAndLower = true;
 				getInBox = false;
-				break;
 			}
 
 			else {
 				correctChoice = false;
 				raiseAndLower = true;
 				getInBox = false;
-				break;
 			}
 		}
 		else {
@@ -175,5 +171,4 @@ void specialkeys(int key, int x, int y) {
 	}
 
 	glutPostRedisplay();
-
 }
