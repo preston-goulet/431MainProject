@@ -42,7 +42,7 @@ float randZ = 0;
 float px, py;//for arrow
 
 		 
-
+int finalScore = 0;
 
 
 // reshape
@@ -84,7 +84,6 @@ Vec3f calculateMiddle(Vec3f p1, Vec3f p2, int level) {
 // create thunderbolt as fractal
 void createBolt(Vec3f p1, Vec3f p2, int level) {
     thunderbolt.push_back(Line(p1.x,p1.y,p1.z, p2.x,p2.y, p2.z));
-    // printf("* \t INSERT-A (%f, %f, %f) -- (%f, %f, %f)\n\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
     for (int t = 0; t < level; t++) {
         int tam = thunderbolt.size();
         Vec3f middle; int i;
@@ -92,19 +91,14 @@ void createBolt(Vec3f p1, Vec3f p2, int level) {
             p1.x = thunderbolt[0].x1; p1.y = thunderbolt[0].y1; p1.z = thunderbolt[0].z1;
             p2.x = thunderbolt[0].x2; p2.y = thunderbolt[0].y2; p2.z = thunderbolt[0].z2;
             thunderbolt.erase(thunderbolt.begin());
-            // printf("%i \t DELETE-- (%f, %f) -- (%f, %f)\n", i,p1.x, p1.y, p2.x, p2.y);
             middle = calculateMiddle(p1, p2, t);
             thunderbolt.push_back(Line(p1.x, p1.y, p1.z, middle.x,middle.y, middle.z));
             thunderbolt.push_back(Line(middle.x, middle.y, middle.z, p2.x,p2.y, p2.z));
-            // printf("%i \t Middle level %d)\n", i, t);
-            // printf("%i \t INSERT-A (%f, %f, %f) -- (%f, %f, %f)\n", i, p1.x, p1.y, p1.z, middle.x, middle.y, middle.z);
-            // printf("%i \t INSERT-B (%f, %f, %f) -- (%f, %f, %f)\n", i, middle.x, middle.y, middle.z, p2.x, p2.y, p2.z);
         }
         // extension line
         Vec3f direction = middle - p1;
         Vec3f pin = middle + direction * 0.7;
         thunderbolt.push_back(Line(middle.x, middle.y, middle.z, pin.x, pin.y, pin.z));
-        //printf("%i \t INSERT-C (%f, %f, %f) -- (%f, %f, %f)\n\n", i, middle.x, middle.y, middle.z, pin.x, pin.y, pin.z);
     }
     
 }
@@ -126,7 +120,6 @@ void init() {
 	glEnable(GL_DEPTH_TEST);
 
 	// mesh
-	//heightMap = getHeightMap(mesh1);
 	mesh1 = createPerlinPlane(80000, 80000, 400);
 	mesh2 = createCube();
 	mesh3 = createCube();
