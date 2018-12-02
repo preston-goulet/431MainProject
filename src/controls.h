@@ -8,6 +8,7 @@
 #include <GL/glut.h>
 #include "GameObject.h"
 #include "Camera.h"
+#include "Common.h"
 
 int window_width = 800, window_height = 800;
 float window_ratio = 1.0;
@@ -55,6 +56,30 @@ float moveBlock_side = 0.0;
 int lightning_x = 0;
 int lightning_z = 0;
 bool showLightning = true;
+
+//Draw 10 boxes for collecting to make guesses
+int box1x = -38000, box1z = 37000;
+int box2x = -38000, box2z = -37000;
+int box3x = -20000, box3z = 20000;
+int box4x = -10000, box4z = -30000;
+int box5x = -5000, box5z = -10000;
+int box6x = 25000, box6z = 15000;
+int box7x = 30000, box7z = -20000;
+int box8x = 37000, box8z = 37000;
+int box9x = 10000, box9z = 1000;
+int box10x = 37000, box10z = -37000;
+
+bool box1 = true;
+bool box2 = true;
+bool box3 = true;
+bool box4 = true;
+bool box5 = true;
+bool box6 = true;
+bool box7 = true;
+bool box8 = true;
+bool box9 = true;
+bool box10 = true;
+int guesses = 0;
 
 // Generates a random number to see if its even or odd
 // If even, the left box is the correct box
@@ -105,7 +130,8 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 		}
 		break;
 	case 'l': case 'L':
-		if (camera_x > -895 && camera_x < 1236 && camera_z > -16890 && camera_z < -14800 && doOnce == true) {
+		if (guesses > 0 && camera_x > -895 && camera_x < 1236 && camera_z > -16890 && camera_z < -14800 && doOnce == true) {
+			guesses--;
 			if (leftBox) {
 				correctChoice = true;
 				totalScore++;
@@ -124,8 +150,9 @@ void callbackKeyboard(unsigned char key, int x, int y) {
 		}
 		break;
 	case 'r': case 'R':
-		if (camera_x > -895 && camera_x < 1236
+		if (guesses > 0 &&camera_x > -895 && camera_x < 1236
 			&& camera_z > -16890 && camera_z < -14800 && doOnce == true) {
+			guesses--;
 			if (!leftBox) {
 				correctChoice = true;
 				totalScore++;

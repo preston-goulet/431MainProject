@@ -105,14 +105,7 @@ void display(void) {
     
 	if (areRecursiveFractalsOn) {
 		// Material for lightning bolt
-		glPushMatrix();
-		GLfloat mat_diffuse_l[] = { 0.50754, 0.50754, 0.50754, 1 };
-		GLfloat mat_specular_l[] = { 0.508273, 0.508273, 0.508273, 1 };
-		GLfloat mat_ambient_l[] = { 0.19225, 0.19225, 0.19225, 1 };
-		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse_l);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_l);
-		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular_l);
-		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, .01);
+	
 
 		// Determine where lightning bolt will be
 		if (countDown % 200 == 0) {
@@ -126,6 +119,7 @@ void display(void) {
 			}
 
 		}
+
 
 		// bolt ----------------------------------------
 		if (showLightning == true) {
@@ -233,6 +227,121 @@ void display(void) {
 	glCallList(display4);
 	glPopMatrix();
 
+	//Boxes to be collected
+
+	if (box1) {
+		glPushMatrix();
+		glTranslatef(box1x, shadowHeight, box1z);
+		glCallList(display3);
+		glPopMatrix();
+	}
+	
+	if (box2) {
+		glPushMatrix();
+		glTranslatef(box2x, shadowHeight, box2z);
+		glCallList(display4);
+		glPopMatrix();
+	}
+	
+	if (box3) {
+		glPushMatrix();
+		glTranslatef(box3x, shadowHeight, box3z);
+		glCallList(display3);
+		glPopMatrix();
+	}
+	
+	if (box4) {
+		glPushMatrix();
+		glTranslatef(box4x, shadowHeight, box4z);
+		glCallList(display4);
+		glPopMatrix();
+	}
+	
+	if (box5) {
+		glPushMatrix();
+		glTranslatef(box5x, shadowHeight, box5z);
+		glCallList(display3);
+		glPopMatrix();
+	}
+	
+	if (box6) {
+		glPushMatrix();
+		glTranslatef(box6x, shadowHeight, box6z);
+		glCallList(display4);
+		glPopMatrix();
+	}
+	
+	if (box7) {
+		glPushMatrix();
+		glTranslatef(box7x, shadowHeight, box7z);
+		glCallList(display3);
+		glPopMatrix();
+	}
+	
+	if (box8) {
+		glPushMatrix();
+		glTranslatef(box8x, shadowHeight, box8z);
+		glCallList(display4);
+		glPopMatrix();
+	}
+	
+	if (box9) {
+		glPushMatrix();
+		glTranslatef(box9x, shadowHeight, box9z);
+		glCallList(display3);
+		glPopMatrix();
+	}
+	
+	if (box10) {
+		glPushMatrix();
+		glTranslatef(box10x, shadowHeight, box10z);
+		glCallList(display4);
+		glPopMatrix();
+	}
+
+	if (box1 == true && camera_x > box1x - 100 && camera_x < box1x + 100 && camera_z > box1z - 100 && camera_z < box1z + 100) {
+		guesses++;
+		box1 = false;
+	}
+	else if (box2 == true && camera_x > box2x - 100 && camera_x < box2x + 100 && camera_z > box2z - 100 && camera_z < box2z + 100) {
+		guesses++;
+		box2 = false;
+	}
+	else if (box10 == true && camera_x > box10x - 100 && camera_x < box10x + 100 && camera_z > box10z - 100 && camera_z < box10z + 100) {
+		guesses++;
+		box10 = false;
+	}
+	else if (box3 == true && camera_x > box3x - 100 && camera_x < box3x + 100 && camera_z > box3z - 100 && camera_z < box3z + 100) {
+		guesses++;
+		box3 = false;
+	}
+	else if (box4 == true && camera_x > box4x - 100 && camera_x < box4x + 100 && camera_z > box4z - 100 && camera_z < box4z + 100) {
+		guesses++;
+		box4 = false;
+	}
+	else if (box5 == true && camera_x > box5x - 100 && camera_x < box5x + 100 && camera_z > box5z - 100 && camera_z < box5z + 100) {
+		guesses++;
+		box5 = false;
+	}
+	else if (box6 == true && camera_x > box6x - 100 && camera_x < box6x + 100 && camera_z > box6z - 100 && camera_z < box6z + 100) {
+		guesses++;
+		box6 = false;
+	}
+	else if (box7 == true && camera_x > box7x - 100 && camera_x < box7x + 100 && camera_z > box7z - 100 && camera_z < box7z + 100) {
+		guesses++;
+		box7 = false;
+	}
+	else if (box8 == true && camera_x > box8x - 100 && camera_x < box8x + 100 && camera_z > box8z - 100 && camera_z < box8z + 100) {
+		guesses++;
+		box8 = false;
+	}
+	else if (box9 == true && camera_x > box9x - 100 && camera_x < box9x + 100 && camera_z > box9z - 100 && camera_z < box9z + 100) {
+		guesses++;
+		box9 = false;
+	}
+	
+
+
 	//========Regular 3d environment=====================================
 	
 
@@ -274,15 +383,15 @@ void display(void) {
 	if (leftBox) {
 		glPushMatrix();
 		glTranslatef(-150, shadowHeight + 5, playArea + 50);
-		glScalef(.1, .1, .1);
-		ps.drawDefaultParticles();//flames
+		glScalef(.5, .5, .5);
+		ps.drawDefaultParticles();
 		glPopMatrix();
 	}
 	else {
 		glPushMatrix();
 		glTranslatef(250, shadowHeight + 5, playArea + 50);
-		glScalef(.1, .1, .1);
-		ps.drawDefaultParticles();//flames
+		glScalef(.5, .5, .5);
+		ps.drawDefaultParticles();
 		glPopMatrix();
 	}
 
@@ -408,6 +517,9 @@ void display(void) {
 		renderBitmapString(10.0, window_height / 9, 0.0f, "View Mode On");
 		renderBitmapString(0.0, window_height - 52.0f, 0.0f, "Use [A and D] to move up and down");
 	}
+	string guessCount = to_string(guesses);
+	renderBitmapString(10.0, (window_height / 9) + 40, 0.0f, "Guesses: ");
+	renderBitmapString(80.0, (window_height / 9) + 40, 0.0f, guessCount.c_str());
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();

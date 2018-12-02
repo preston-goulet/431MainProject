@@ -41,6 +41,10 @@ float randZ = 0;
 //Moving Flat
 float px, py;//for arrow
 
+		 
+
+
+
 // reshape
 void reshape(int w, int h) {
 	window_width = w;
