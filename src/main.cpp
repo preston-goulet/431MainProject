@@ -103,50 +103,52 @@ void display(void) {
 		glPopMatrix();
 	}
     
-	// Material for lightning bolt
-	glPushMatrix();
-	GLfloat mat_diffuse_l[] = { 0.50754, 0.50754, 0.50754, 1 };
-	GLfloat mat_specular_l[] = { 0.508273, 0.508273, 0.508273, 1 };
-	GLfloat mat_ambient_l[] = { 0.19225, 0.19225, 0.19225, 1 };
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse_l);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_l);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular_l);
-	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, .01);
-
-	// Determine where lightning bolt will be
-	if (countDown % 200 == 0) {
-		generateLightningPos();
-
-		if (showLightning == true) {
-			showLightning = false;
-		}
-		else {
-			showLightning = true;
-		}
-		
-	}
-	
-    // bolt ----------------------------------------
-	if (showLightning == true) {
+	if (areRecursiveFractalsOn) {
+		// Material for lightning bolt
 		glPushMatrix();
-		glTranslatef(lightning_x, 500, lightning_z);
-		glScalef(5000, 5000, 5000);
-		int size = thunderbolt.size();
-		int in_gray = (size / 2);
-		int counter = 0;
-		float width = .1;
-		for (Line line : thunderbolt) {
-			glBegin(GL_QUADS);
-			glVertex3f(line.x1, line.y1, line.z1);
-			glVertex3f(line.x1 + width, line.y1, line.z1 + width);
-			glVertex3f(line.x2, line.y2, line.z2);
-			glVertex3f(line.x2 + width, line.y2, line.z2 + width);
-			glEnd();
-			counter++;
-			width -= 0.005;
+		GLfloat mat_diffuse_l[] = { 0.50754, 0.50754, 0.50754, 1 };
+		GLfloat mat_specular_l[] = { 0.508273, 0.508273, 0.508273, 1 };
+		GLfloat mat_ambient_l[] = { 0.19225, 0.19225, 0.19225, 1 };
+		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse_l);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_l);
+		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular_l);
+		glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, .01);
+
+		// Determine where lightning bolt will be
+		if (countDown % 200 == 0) {
+			generateLightningPos();
+
+			if (showLightning == true) {
+				showLightning = false;
+			}
+			else {
+				showLightning = true;
+			}
+
 		}
-		glPopMatrix();
-		// end
+
+		// bolt ----------------------------------------
+		if (showLightning == true) {
+			glPushMatrix();
+			glTranslatef(lightning_x, 500, lightning_z);
+			glScalef(5000, 5000, 5000);
+			int size = thunderbolt.size();
+			int in_gray = (size / 2);
+			int counter = 0;
+			float width = .1;
+			for (Line line : thunderbolt) {
+				glBegin(GL_QUADS);
+				glVertex3f(line.x1, line.y1, line.z1);
+				glVertex3f(line.x1 + width, line.y1, line.z1 + width);
+				glVertex3f(line.x2, line.y2, line.z2);
+				glVertex3f(line.x2 + width, line.y2, line.z2 + width);
+				glEnd();
+				counter++;
+				width -= 0.005;
+			}
+			glPopMatrix();
+			// end
+		}
 	}
     
 	//========================================
