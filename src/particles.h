@@ -149,7 +149,6 @@ public:
 
 		while (curr) {
 			glPushMatrix();
-			//glScalef(100.0, 100.0, 100.0);
 			glTranslatef(curr->position[0], curr->position[1], curr->position[2]);
 			glScalef(0.2, 0.2, 0.2);
 			glColor4f(curr->color[0], curr->color[1], curr->color[2], 0.3);

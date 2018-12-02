@@ -23,7 +23,7 @@ float y_angle = 0.0;
 
 int totalScore = 00;
 int countDown = 10000;
-int moveSpeed = 100;
+int moveSpeed = 50;
 float playerLook = 0;
 float angle = 0;
 
@@ -199,13 +199,13 @@ void specialkeys(int key, int x, int y) {
 		moveMeFlat(-moveSpeed);
 		break;
 	case GLUT_KEY_LEFT:
-		angle -= 0.1f;
+		angle -= 0.05f;
 		orientMe(angle);
 		playerLook += 5;
 
 		break;
 	case GLUT_KEY_RIGHT:
-		angle += 0.1f;
+		angle += 0.05f;
 		orientMe(angle);
 		playerLook -= 5;
 

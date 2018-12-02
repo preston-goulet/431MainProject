@@ -42,31 +42,6 @@ struct Points {
 float **heightMap;
 int xLength, yLength;
 
-/*
-float ** getHeightMap(Mesh* mesh) {
-	int size = mesh->dot_vertex.size();
-	const int indexLength = (int)(sqrt(size));
-	float ** meshHeight = new float*[indexLength];
-	for (int x = 0; x < indexLength; x++) {
-		meshHeight[x] = new float[indexLength];
-	}
-
-	int x = 0;
-	int y = 0;
-	for (Vec3f i : mesh->dot_vertex) {
-		meshHeight[x][y] = i.y;
-		x++;
-		if (x >= indexLength) {
-			x = 0;
-			y++;
-		}
-		if (y >= indexLength) {
-			y = 0;
-		}
-	}
-	return meshHeight;
-}
-*/
 // OBJ file - str to int
 int StrToInt(const string &str) {
 	int i;

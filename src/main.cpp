@@ -1,9 +1,9 @@
 /**
  * SER 431
  * https://speakerdeck.com/javiergs/ser431-lecture-04
+
  By Preston Goulet(pegoulet) & Taylor Greeff(tgreeff)
 
- TODO: fix camera; allow use of mouse to move
  **/
 
 #include "Common.h"
@@ -96,7 +96,6 @@ void display(void) {
 
 		//flag reflection
 		glPushMatrix();
-		
 		glTranslatef(400, shadowHeight - 700, playArea);
 		glScalef(100, -100, 100);
 		draw_nurb3();
@@ -168,6 +167,7 @@ void display(void) {
 	glEnable(GL_LIGHTING);
 	glPopMatrix();
 	glDisable(GL_BLEND);
+
 	// Shadows
 	if (areShadowsOn) {
 		glStencilFunc(GL_EQUAL, 1, 0xFFFFFFFF);
@@ -176,33 +176,41 @@ void display(void) {
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glDisable(GL_LIGHTING);  /* Force the 50% black. */
 		glColor4f(0.0, 0.0, 0.0, 0.5);
-		glPushMatrix();
 		// Project the shadow
 		glMultMatrixf((GLfloat *)shadow_matrix);
 		// boxes
 		glDisable(GL_DEPTH_TEST);
-		glScalef(0, 10, 0);
-		glCallList(display2);
-		glTranslatef(0, shadowHeight, playArea);
-		glCallList(display3);
-		glTranslatef(200, shadowHeight + boxMovement, playArea);
-		glCallList(display4);
-		glTranslatef(-200, shadowHeight + boxMovement + 50, playArea);
-		glScalef(100, 100, 100);
-		draw_nurb3();
+		glPushMatrix();
+			glScalef(0, 10, 0);
+			glCallList(display2);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(0, shadowHeight, playArea);
+			glCallList(display3);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(200, shadowHeight + boxMovement, playArea);
+			glCallList(display4);
+		glPopMatrix();
+		glPushMatrix();
+			glTranslatef(-200, shadowHeight + boxMovement + 50, playArea);
+			glScalef(100, 100, 100);
+			draw_nurb3();
+		glPopMatrix();
+
 		//jet
 		glPushMatrix();
-		glTranslatef(pathLocation[0], pathLocation[1], pathLocation[2]);
-		glScalef(100, 100, 100);
-		glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
-		glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
-		glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
-		glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
-		glCallList(jetMesh);
+			glTranslatef(pathLocation[0], pathLocation[1], pathLocation[2]);
+			glScalef(100, 100, 100);
+			glTranslatef(jet.position[0], jet.position[1], jet.position[2]);
+			glRotatef(jet.rotation[0], 1.0, 0.0, 0.0);
+			glRotatef(jet.rotation[1], 0.0, 1.0, 0.0);
+			glRotatef(jet.rotation[2], 0.0, 0.0, 1.0);
+			glCallList(jetMesh);
 		glPopMatrix();
 
 		glEnable(GL_DEPTH_TEST);
-		glPopMatrix();
+		//glPopMatrix();
 
 		glDisable(GL_BLEND);
 		glEnable(GL_LIGHTING);
@@ -477,6 +485,8 @@ void display(void) {
 	//=======================================================================
 	countDown = countDown - 1;
 	string countDownString = to_string(countDown);
+	string scoreString = to_string(totalScore);
+	
 	glDisable(GL_LIGHTING);
 
 	// texto
@@ -491,8 +501,18 @@ void display(void) {
 	renderBitmapString(0.0, window_height - 13.0f, 0.0f, "Use [Arrows] to move in plain");
 	renderBitmapString(0.0, window_height - 26.0f, 0.0f, "Use [W and S] to look up and down");
 	renderBitmapString(0.0, window_height - 39.0f, 0.0f, "Use [L and R] to select the left or right boxes respectively.");
-	renderBitmapString((window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: ");
-	renderBitmapString((window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str());
+	if (countDown > 0) {
+		renderBitmapString((window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "Time Left: ");
+		renderBitmapString((window_width / 2) + 40, (window_height / 10) * 9, 0.0f, countDownString.c_str());
+		finalScore = totalScore;
+	}
+	else {
+		string finalString = to_string(finalScore);
+		renderBitmapString((window_width / 2) - 50, (window_height / 10) * 9, 0.0f, "GAME OVER");
+		renderBitmapString((window_width / 2) - 50, (window_height / 10) * 8, 0.0f, "Final Score");
+		renderBitmapString((window_width / 2) + 50, (window_height / 10) * 8, 0.0f, finalString.c_str());
+	}
+	
 	if (getInBox) {
 		renderBitmapString((window_width / 2) - 150, ((window_height / 10) * 9) + 20, 0.0f, "Go to the area with the Flag to make a choice!");
 	}
@@ -505,7 +525,6 @@ void display(void) {
 		renderBitmapString((window_width / 2) - 50, ((window_height / 10) * 9) + 20, 0.0f, "Wrong :(");
 	}
 
-	string scoreString = to_string(totalScore);
 	glColor3f(1.0, 1.0, 1.0);
 	renderBitmapString(10.0, window_height / 8, 0.0f, "Score: ");
 	renderBitmapString(70, window_height / 8, 0.0f, scoreString.c_str());
