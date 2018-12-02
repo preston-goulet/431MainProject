@@ -42,7 +42,7 @@ public:
     void updateRotation() {
         Vec3f pos = Vec3f(gameObject->position[0], gameObject->position[1], gameObject->position[2]);
         Vec3f next = follower->getNextPoint();
-        Vec3f up = Vec3f(1, 1, 0).normalize();
+        Vec3f up = Vec3f(0, 1, 0).normalize();
 
         Vec3f z = (pos - next).normalize();
         Vec3f x = (z.cross(up)).normalize();

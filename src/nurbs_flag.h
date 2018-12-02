@@ -13,7 +13,8 @@
 // Knot sequences for cubic bezier surface and trims 
 GLfloat sknots[V_NUMKNOTS] = { 0., 0., 0., 0., 1., 1., 1., 1. };
 GLfloat tknots[U_NUMKNOTS] = { 0., 0., 0., 0., 1., 1., 1., 1. };
-
+GLfloat texSknots[V_NUMKNOTS] = { 0., 0., 1., 1. };
+GLfloat texTknots[U_NUMKNOTS] = { 0., 0., 1., 1. };
 
 // Control points for the flag. The Z values are modified to make it wave
 GLfloat ctlpoints[V_NUMPOINTS][U_NUMPOINTS][3] = {
@@ -32,9 +33,12 @@ GLUnurbsObj *nurbsflag;          //original
 GLUnurbsObj *nurbsflag_two;      //reflection
 GLUnurbsObj *nurbsflag_three;    //shadow
 
-
 // draw_control_graph
 void draw_control_graph(GLfloat cpoints[V_NUMPOINTS][U_NUMPOINTS][3]) {
+	if (!areNURBsGridsOn) {
+		return;
+	}
+
 	int s, t;
 	glDisable(GL_LIGHTING);
 	glColor3f(0, 0, 1);
@@ -68,6 +72,7 @@ void draw_nurb(GLuint texture) {
 	
 	glRotatef(90, 0., 0., 1.);
 	gluBeginSurface(nurbsflag);
+	gluNurbsSurface(nurbsflag, V_NUMKNOTS, sknots, U_NUMKNOTS, tknots, 3 * 2, 2, &textPoints[0][0][0], 3, 4, GL_MAP2_TEXTURE_COORD_2);
 	gluNurbsSurface(nurbsflag, V_NUMKNOTS, sknots, U_NUMKNOTS, tknots, 3 * U_NUMPOINTS, 3, &ctlpoints[0][0][0], 4, 4, GL_MAP2_VERTEX_3);
 	gluEndSurface(nurbsflag);
 
@@ -75,29 +80,10 @@ void draw_nurb(GLuint texture) {
 	glPopMatrix();
 }
 
-// draw_nurb
-void draw_nurb2() {
-	static GLfloat angle = 0.0;
-	int i, j;
-	// wave the flag by rotating Z coords though a sine wave
-	for (i = 1; i < 4; i++)
-		for (j = 0; j < 4; j++)
-			ctlpoints[i][j][2] = sin((GLfloat)i + angle);
-	angle += 0.01;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glPushMatrix();
-
-	glRotatef(90, 0., 0., 1.);
-	gluBeginSurface(nurbsflag_two);
-	gluNurbsSurface(nurbsflag_two, V_NUMKNOTS, sknots, U_NUMKNOTS, tknots, 3 * U_NUMPOINTS, 3, &ctlpoints[0][0][0], 4, 4, GL_MAP2_VERTEX_3);
-	gluEndSurface(nurbsflag);
-
-	draw_control_graph(ctlpoints);
-	glPopMatrix();
-}
 
 // draw_nurb
 void draw_nurb3() {
+
 	static GLfloat angle = 0.0;
 	int i, j;
 	// wave the flag by rotating Z coords though a sine wave
@@ -105,8 +91,8 @@ void draw_nurb3() {
 		for (j = 0; j < 4; j++)
 			ctlpoints[i][j][2] = sin((GLfloat)i + angle);
 	angle += 0.01;
-	glPushMatrix();
 
+	glPushMatrix();
 	glRotatef(90, 0., 0., 1.);
 	gluBeginSurface(nurbsflag_three);
 	gluNurbsSurface(nurbsflag_three, V_NUMKNOTS, sknots, U_NUMKNOTS, tknots, 3 * U_NUMPOINTS, 3, &ctlpoints[0][0][0], 4, 4, GL_MAP2_VERTEX_3);
