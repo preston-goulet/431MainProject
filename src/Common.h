@@ -18,7 +18,7 @@
 #include "nurbs_flag.h"
 #include "ObjectPathing.h"
 
-
+#define random_number() (((float) rand())/((float) RAND_MAX))
 // global
 Mesh *mesh1, *mesh2, *mesh3, *mesh4, *mesh5, *mesh6, *mesh7, *mesh8, *mesh9, *mesh11;
 Mesh *mesh[10];
@@ -57,11 +57,63 @@ void renderBitmapString(float x, float y, float z, const char *string) {
 		glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *c);
 }
 
+// Use in thunderbolt
+class Line {
+public:
+    float x1, y1, x2, y2, z1,z2;
+    Line(float a, float b, float c, float d, float e, float f) {
+        x1 = a; y1 = b; z1 = c;  x2 = d; y2 = e; z2 = f;
+    }
+};
+vector<Line> thunderbolt;
+
+// calculate middle points with a displacement for the thunderbolt
+Vec3f calculateMiddle(Vec3f p1, Vec3f p2, int level) {
+    Vec3f O = (p2+p1)/2;
+    float m1 = (p2.y - p1.y) / (p2.x - p1.x);
+    int signo = (random_number()>0.5) ? 1 : -1;
+    float x = O.x + signo*((cos(PI/2 + atan(m1)))/ pow(2, level)); // higher level, small displacement
+    float y = O.y + signo*((sin(PI/2 + atan(m1)))/ pow(2, level));
+    return Vec3f(x, y, signo*random_number() / pow(2, level));
+}
+
+// create thunderbolt as fractal
+void createBolt(Vec3f p1, Vec3f p2, int level) {
+    thunderbolt.push_back(Line(p1.x,p1.y,p1.z, p2.x,p2.y, p2.z));
+    // printf("* \t INSERT-A (%f, %f, %f) -- (%f, %f, %f)\n\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+    for (int t = 0; t < level; t++) {
+        int tam = thunderbolt.size();
+        Vec3f middle; int i;
+        for (i = 0; i < tam; i++) {
+            p1.x = thunderbolt[0].x1; p1.y = thunderbolt[0].y1; p1.z = thunderbolt[0].z1;
+            p2.x = thunderbolt[0].x2; p2.y = thunderbolt[0].y2; p2.z = thunderbolt[0].z2;
+            thunderbolt.erase(thunderbolt.begin());
+            // printf("%i \t DELETE-- (%f, %f) -- (%f, %f)\n", i,p1.x, p1.y, p2.x, p2.y);
+            middle = calculateMiddle(p1, p2, t);
+            thunderbolt.push_back(Line(p1.x, p1.y, p1.z, middle.x,middle.y, middle.z));
+            thunderbolt.push_back(Line(middle.x, middle.y, middle.z, p2.x,p2.y, p2.z));
+            // printf("%i \t Middle level %d)\n", i, t);
+            // printf("%i \t INSERT-A (%f, %f, %f) -- (%f, %f, %f)\n", i, p1.x, p1.y, p1.z, middle.x, middle.y, middle.z);
+            // printf("%i \t INSERT-B (%f, %f, %f) -- (%f, %f, %f)\n", i, middle.x, middle.y, middle.z, p2.x, p2.y, p2.z);
+        }
+        // extension line
+        Vec3f direction = middle - p1;
+        Vec3f pin = middle + direction * 0.7;
+        thunderbolt.push_back(Line(middle.x, middle.y, middle.z, pin.x, pin.y, pin.z));
+        //printf("%i \t INSERT-C (%f, %f, %f) -- (%f, %f, %f)\n\n", i, middle.x, middle.y, middle.z, pin.x, pin.y, pin.z);
+    }
+    
+}
+
 // init
 void init() {
 	// particles
 	init_frame_timer();
-
+    
+    // init thunderbolt
+    srand(time(0));
+    createBolt(Vec3f(5, 5, 0), Vec3f(0, 0, 0), 4);
+    
 	// menu
 	addMenu();
 

@@ -102,7 +102,53 @@ void display(void) {
 		draw_nurb3();
 		glPopMatrix();
 	}
+    
+	// Material for lightning bolt
+	glPushMatrix();
+	GLfloat mat_diffuse_l[] = { 0.50754, 0.50754, 0.50754, 1 };
+	GLfloat mat_specular_l[] = { 0.508273, 0.508273, 0.508273, 1 };
+	GLfloat mat_ambient_l[] = { 0.19225, 0.19225, 0.19225, 1 };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse_l);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, mat_ambient_l);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular_l);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, .01);
 
+	// Determine where lightning bolt will be
+	if (countDown % 200 == 0) {
+		generateLightningPos();
+
+		if (showLightning == true) {
+			showLightning = false;
+		}
+		else {
+			showLightning = true;
+		}
+		
+	}
+	
+    // bolt ----------------------------------------
+	if (showLightning == true) {
+		glPushMatrix();
+		glTranslatef(lightning_x, 500, lightning_z);
+		glScalef(5000, 5000, 5000);
+		int size = thunderbolt.size();
+		int in_gray = (size / 2);
+		int counter = 0;
+		float width = .1;
+		for (Line line : thunderbolt) {
+			glBegin(GL_QUADS);
+			glVertex3f(line.x1, line.y1, line.z1);
+			glVertex3f(line.x1 + width, line.y1, line.z1 + width);
+			glVertex3f(line.x2, line.y2, line.z2);
+			glVertex3f(line.x2 + width, line.y2, line.z2 + width);
+			glEnd();
+			counter++;
+			width -= 0.005;
+		}
+		glPopMatrix();
+		// end
+	}
+    
 	//========================================
 	//	Shadows
 	//========================================
@@ -184,7 +230,6 @@ void display(void) {
 	glTranslatef(-200, shadowHeight + boxMovement, playArea);
 	glCallList(display4);
 	glPopMatrix();
-	glPopMatrix();
 
 	//========Regular 3d environment=====================================
 	
@@ -211,14 +256,14 @@ void display(void) {
 	glCallList(display6);
 	glPopMatrix();
 
-	////runway
-	//for (int x = 0; x < 10; x++) {
-	//	glPushMatrix();
-	//	glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
-	//	glCallList(runway);
-	//	glPopMatrix();
-	//}
-	glPopMatrix();
+	//runway
+	for (int x = 0; x < 10; x++) {
+		glPushMatrix();
+		glTranslatef(runway_x, runway_y, -(1800 * x) + runway_z);
+		glCallList(runway);
+		glPopMatrix();
+	}
+
 	glEnable(GL_LIGHTING);
 	glDisable(GL_BLEND);
 	glEnable(GL_LIGHT0);
@@ -312,6 +357,9 @@ void display(void) {
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
+	glDisable(GL_CULL_FACE);
+
+
 
 	//=======================================================================
 	// Lighting disabled from here on to allow other colors on the screen
@@ -388,7 +436,7 @@ void display(void) {
 	glVertex2f(0, window_height);//top left
 	glEnd();
 
-	glDisable(GL_CULL_FACE);
+	
 	glPopMatrix();
 	glEnable(GL_LIGHTING);
 	glutSwapBuffers();
